@@ -1,0 +1,20 @@
+func int factorial (int n) {
+    if (n < 0) {
+        return -1;
+    }
+    if (n == 0 || n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
+main (int argc, array string argv[]) {
+    if (argc >= 2) {
+        int n = to_int(argv[1]);
+        int result = factorial(n);
+        print("Factorial of the number is ");
+        println(result);
+    } else {
+        println("No number is passed");
+    }
+}
