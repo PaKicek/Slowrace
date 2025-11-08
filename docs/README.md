@@ -12,7 +12,7 @@
 Пример программы Hello World:
 ```cpp
 main (int argc, array string argv[]) {
-    print("Hello World!");
+    println("Hello World!");
 }
 ```
 
