@@ -1,4 +1,4 @@
-func array int insertion_sort (array int numbers) {
+func array int insertion_sort (array int numbers) { // up to 10000 elements
     for (int i = 1; i < len(numbers); i++) {
         int key = numbers[i];
         int j = i - 1;

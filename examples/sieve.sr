@@ -1,4 +1,4 @@
-func void sieve (int n) {
+func void sieve (int n) { // up to 100000
     if (n < 2) {
         println("There are no prime numbers less than 2");
     } else {
