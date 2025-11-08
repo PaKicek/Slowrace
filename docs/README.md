@@ -289,6 +289,7 @@ for (int i = 0; i < len(a); i++) {
 Output: `slow`
 
 Цикл `while` - может применяться, когда число итераций неизвестно.
+
 Пример:
 ```cpp
 main (int argc, array string argv[]) {
@@ -299,13 +300,14 @@ main (int argc, array string argv[]) {
   }
 }
 ```
+
 Input: `a, b, c, stop, d, e`
+
 Output: 
 ```cpp
 a
 b
 c
-
 ```
 
 ## Встроенные функции
