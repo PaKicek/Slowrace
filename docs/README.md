@@ -306,6 +306,7 @@ func void sum4 (int a, int b) {
 ## Условные операторы
 `if-elif-else` - это условная конструкция, которая позволяет выполнять один из двух блоков кода: один — если условие истинно, другой — если условие ложно.
 
+После ключевого слова (`if` или `elif`) в скобках (`()`) идёт само условие, в котором проверяется истинность выражения.
 
 Пример 1:
 ```cpp
@@ -361,7 +362,7 @@ for (int i = 0; i < 5; i++) {
 ```
 
 Пример 2:
-```
+```cpp
 array string a[4] = ["s", "l", "o", "w"];
 for (int i = 0; i < len(a); i++) {
 	print(a[i]);
@@ -378,16 +379,16 @@ for (int i = 0; i < len(a); i++) {
 ```cpp
 main (int argc, array string argv[]) {
   int i = 0;
-  while (argv[i] ~= "stop" && i < len(argv)) {
+  while (argv[i] != "stop" && i < argc) {
     println(argv[i]);
     i++;
   }
 }
 ```
 
-Input: `a, b, c, stop, d, e`
+Ввод (аргументы командной строки): `a, b, c, stop, d, e`
 
-Output: 
+Вывод: 
 ```cpp
 a
 b
