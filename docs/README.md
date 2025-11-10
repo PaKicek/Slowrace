@@ -17,10 +17,9 @@ main (int argc, array string argv[]) {
 ```
 
 ## Ключевые слова
-- `int`, `float`, `string`, `bool`
+- `int`, `float`, `string`, `bool`, `void`
 - `array`, `func`, `main`, `return`
 - `ìf`, `else`, `elif`, `for`, `while`
-- `null`
 
 ## Типы данных
 - `int` - число (значимый тип, занимает в памяти 8 байт, диапазон от `-9223372036854775807` до `9223372036854775807`). По умолчанию инициализируется значением `0`.
