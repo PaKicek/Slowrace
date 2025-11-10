@@ -191,7 +191,7 @@ public class Lexer {
 
         while (isDigit(peek())) advance();
 
-        // Check for float (with dot as the separator)
+        // Check for float (with dot as the delimiter)
         if (peek() == '.' && isDigit(peekNext())) {
             isFloat = true;
             advance(); // Skip the dot
