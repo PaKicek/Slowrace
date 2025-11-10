@@ -2,6 +2,7 @@
 package org.pakicek.parser.ast.expressions;
 
 import org.pakicek.parser.ast.Expression;
+import org.pakicek.parser.lexer.Token;
 
 public class BinaryExpression implements Expression {
     public final Expression left;

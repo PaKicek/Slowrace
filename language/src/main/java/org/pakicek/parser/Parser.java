@@ -31,6 +31,9 @@ public class Parser {
         try {
             if (match(TokenType.FUNC)) return functionDeclaration();
             if (match(TokenType.INT, TokenType.FLOAT, TokenType.STRING, TokenType.BOOL)) {
+                if (match(TokenType.LEFT_BRACKET)) {
+                    return arrayDeclaration();
+                }
                 return variableDeclaration();
             }
             return statement();
@@ -76,6 +79,34 @@ public class Parser {
         BlockStatement body = (BlockStatement) blockStatement();
         
         return new FunctionDeclaration(name.lexeme(), parameters, parameterTypes, returnType, body);
+    }
+    
+    private Statement arrayDeclaration() {
+        Token type = previous(); // тип массива (INT, FLOAT, etc.)
+        consume(TokenType.RIGHT_BRACKET, "Expect ']' after array type");
+        Token name = consume(TokenType.IDENTIFIER, "Expect array name");
+        
+        Expression size = null;
+        List<Expression> elements = null;
+        
+        if (match(TokenType.ASSIGN)) {
+            if (match(TokenType.LEFT_BRACKET)) {
+                // Массив с элементами: int[] arr = [1, 2, 3]
+                elements = new ArrayList<>();
+                if (!check(TokenType.RIGHT_BRACKET)) {
+                    do {
+                        elements.add(expression());
+                    } while (match(TokenType.COMMA));
+                }
+                consume(TokenType.RIGHT_BRACKET, "Expect ']' after array elements");
+            } else {
+                // Массив с размером: int[] arr = 10
+                size = expression();
+            }
+        }
+        
+        consume(TokenType.SEMICOLON, "Expect ';' after array declaration");
+        return new ArrayDeclaration(type.lexeme(), name.lexeme(), elements, size);
     }
     
     private Statement variableDeclaration() {
@@ -212,6 +243,9 @@ public class Parser {
             if (expr instanceof IdentifierExpression) {
                 String name = ((IdentifierExpression) expr).name;
                 return new AssignmentExpression(name, value);
+            } else if (expr instanceof ArrayAccessExpression) {
+                ArrayAccessExpression arrayExpr = (ArrayAccessExpression) expr;
+                return new AssignmentExpression(((IdentifierExpression) arrayExpr.array).name, value);
             }
             
             error(equals, "Invalid assignment target");
@@ -308,6 +342,10 @@ public class Parser {
         while (true) {
             if (match(TokenType.LEFT_PAREN)) {
                 expr = finishCall(expr);
+            } else if (match(TokenType.LEFT_BRACKET)) {
+                Expression index = expression();
+                consume(TokenType.RIGHT_BRACKET, "Expect ']' after array index");
+                expr = new ArrayAccessExpression(expr, index);
             } else {
                 break;
             }
