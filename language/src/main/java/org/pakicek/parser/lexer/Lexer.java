@@ -194,9 +194,9 @@ public class Lexer {
         // Check for float (with dot as the delimiter)
         if (peek() == '.' && isDigit(peekNext())) {
             isFloat = true;
-            advance(); // Skip the dot
 
-            while (isDigit(peek())) advance();
+            do advance();
+            while (isDigit(peek()));
         }
 
         String numberStr = source.substring(start, current);
