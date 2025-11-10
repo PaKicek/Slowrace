@@ -13,6 +13,9 @@ public class Lexer {
     private int line = 1;
     private int position = 1;
 
+    private int tokenStartLine = 1;
+    private int tokenStartPosition = 1;
+
     private static final Map<String, TokenType> keywords;
 
     static {
@@ -47,6 +50,8 @@ public class Lexer {
     public List<Token> scanTokens() {
         while (!isAtEnd()) {
             start = current;
+            tokenStartLine = line;
+            tokenStartPosition = position;
             scanToken();
         }
 
@@ -56,8 +61,6 @@ public class Lexer {
 
     private void scanToken() {
         char c = advance();
-        position++;
-
         switch (c) {
             // Single symbols
             case '(': addToken(TokenType.LEFT_PAREN); break;
@@ -188,15 +191,15 @@ public class Lexer {
 
         while (isDigit(peek())) advance();
 
-        // Check for float (with comma as the separator)
-        if (peek() == ',' && isDigit(peekNext())) {
+        // Check for float (with dot as the separator)
+        if (peek() == '.' && isDigit(peekNext())) {
             isFloat = true;
-            advance(); // Skip the comma
+            advance(); // Skip the dot
 
             while (isDigit(peek())) advance();
         }
 
-        String numberStr = source.substring(start, current).replace(',', '.');
+        String numberStr = source.substring(start, current);
 
         if (isFloat) {
             addToken(TokenType.FLOAT_LITERAL, Double.parseDouble(numberStr));
@@ -263,6 +266,7 @@ public class Lexer {
 
     private char advance() {
         current++;
+        position++;
         return source.charAt(current - 1);
     }
 
@@ -272,7 +276,7 @@ public class Lexer {
 
     private void addToken(TokenType type, Object literal) {
         String text = source.substring(start, current);
-        tokens.add(new Token(type, text, literal, line, position - (current - start)));
+        tokens.add(new Token(type, text, literal, tokenStartLine, tokenStartPosition));
     }
 
     private void error(String message) {
