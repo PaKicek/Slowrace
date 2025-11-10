@@ -11,17 +11,11 @@ public class ArrayDeclaration implements Statement {
     public final List<Expression> elements;
     public final Expression size;
     
-    public ArrayDeclaration(String type, String name, List<Expression> elements) {
+    // ОДИН универсальный конструктор
+    public ArrayDeclaration(String type, String name, List<Expression> elements, Expression size) {
         this.type = type;
         this.name = name;
         this.elements = elements;
-        this.size = null;
-    }
-    
-    public ArrayDeclaration(String type, String name, Expression size) {
-        this.type = type;
-        this.name = name;
-        this.elements = null;
         this.size = size;
     }
     
