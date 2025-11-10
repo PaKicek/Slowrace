@@ -377,7 +377,7 @@ for (int i = 0; i < len(a); i++) {
 Пример:
 ```cpp
 main (int argc, array string argv[]) {
-  int i = 0;
+  int i = 1;
   while (argv[i] != "stop" && i < argc) {
     println(argv[i]);
     i++;
