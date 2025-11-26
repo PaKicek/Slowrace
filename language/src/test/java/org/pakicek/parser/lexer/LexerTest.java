@@ -1,17 +1,11 @@
 package org.pakicek.parser.lexer;
 
-import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import java.util.List;
 
 public class LexerTest {
     private Lexer lexer;
-
-    @Before
-    public void setUp() {
-        // Setting up before test
-    }
 
     @Test
     public void testEmptySource() {
@@ -24,7 +18,11 @@ public class LexerTest {
 
     @Test
     public void testHelloWorld() {
-        String code = "main (int argc, array string argv[]) {\n    println(\"Hello World!\");\n}";
+        String code = """
+            main (int argc, array string argv[]) {
+                println("Hello World!");
+            }
+            """;
         lexer = new Lexer(code);
         List<Token> tokens = lexer.scanTokens();
 
