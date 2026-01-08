@@ -1,4 +1,8 @@
 package org.pakicek.vm.runtime;
 
-public class SrObject {
+public abstract class SrObject {
+    public boolean isMarked = false; // For Mark-and-Sweep
+
+    // Returns object size for memory accounting (optional)
+    public abstract int getSize();
 }
