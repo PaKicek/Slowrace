@@ -13,14 +13,14 @@ func array int insertion_sort (array int numbers) { // up to 10000 elements
 
 main (int argc, array string argv[]) {
     array int numbers[10] = [3, 4, 2, 6, 7, 4, 0, -4, -9, 23];
-    print("The original array is ");
+    print("Original array: ");
     for (int i = 0; i < len(numbers); i++) {
         print(numbers[i]);
         print(" ");
     }
     println("");
     array int result[10] = insertion_sort(numbers);
-    print("The sorted array is ");
+    print("Sorted array ");
     for (int i = 0; i < len(result); i++) {
         print(result[i]);
         print(" ");

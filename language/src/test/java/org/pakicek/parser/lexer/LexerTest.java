@@ -66,8 +66,67 @@ public class LexerTest {
     }
 
     @Test
+    public void testStructDefinition() {
+        String code = """
+            struct Point {
+                float x;
+                float y;
+            }
+            """;
+        lexer = new Lexer(code);
+        List<Token> tokens = lexer.scanTokens();
+
+        TokenType[] expectedTypes = {
+                TokenType.STRUCT, TokenType.IDENTIFIER, TokenType.LEFT_BRACE,
+                TokenType.FLOAT, TokenType.IDENTIFIER, TokenType.SEMICOLON,
+                TokenType.FLOAT, TokenType.IDENTIFIER, TokenType.SEMICOLON,
+                TokenType.RIGHT_BRACE, TokenType.EOF
+        };
+
+        assertTokens(expectedTypes, tokens);
+        assertEquals("Point", tokens.get(1).getLexeme());
+    }
+
+    @Test
+    public void testFieldAccess() {
+        String code = "p.x = 10.5; user.age = 25;";
+        lexer = new Lexer(code);
+        List<Token> tokens = lexer.scanTokens();
+
+        TokenType[] expectedTypes = {
+                TokenType.IDENTIFIER, TokenType.DOT, TokenType.IDENTIFIER, TokenType.ASSIGN, TokenType.FLOAT_LITERAL, TokenType.SEMICOLON,
+                TokenType.IDENTIFIER, TokenType.DOT, TokenType.IDENTIFIER, TokenType.ASSIGN, TokenType.INTEGER_LITERAL, TokenType.SEMICOLON,
+                TokenType.EOF
+        };
+
+        assertTokens(expectedTypes, tokens);
+    }
+
+    @Test
+    public void testDotVsFloat() {
+        // Check: 3.14 (float), 3.field (int + dot + id), 3. (int + dot)
+        String code = "3.14 3.x 3.";
+        lexer = new Lexer(code);
+        List<Token> tokens = lexer.scanTokens();
+
+        TokenType[] expectedTypes = {
+                TokenType.FLOAT_LITERAL,
+                TokenType.INTEGER_LITERAL, TokenType.DOT, TokenType.IDENTIFIER,
+                TokenType.INTEGER_LITERAL, TokenType.DOT,
+                TokenType.EOF
+        };
+
+        assertTokens(expectedTypes, tokens);
+
+        assertEquals(3.14, tokens.get(0).getLiteral());
+        assertEquals(3L, tokens.get(1).getLiteral()); // 3
+        assertEquals("x", tokens.get(3).getLexeme());
+        assertEquals(3L, tokens.get(4).getLiteral()); // 3
+    }
+
+    @Test
     public void testOperators() {
-        String code = "a + b - c * d / e % f & g | h && i || j == k != l > m < n >= o <= p = q;";
+        String code = "a + b - c * d / e % f & g | h && i || j == k != l > m < n >= o <= p = q . r;";
         lexer = new Lexer(code);
         List<Token> tokens = lexer.scanTokens();
 
@@ -80,7 +139,7 @@ public class LexerTest {
                 TokenType.IDENTIFIER, TokenType.NOT_EQUALS, TokenType.IDENTIFIER, TokenType.GREATER,
                 TokenType.IDENTIFIER, TokenType.LESS, TokenType.IDENTIFIER, TokenType.GREATER_EQUAL,
                 TokenType.IDENTIFIER, TokenType.LESS_EQUAL, TokenType.IDENTIFIER, TokenType.ASSIGN,
-                TokenType.IDENTIFIER, TokenType.SEMICOLON, TokenType.EOF
+                TokenType.IDENTIFIER, TokenType.DOT, TokenType.IDENTIFIER, TokenType.SEMICOLON, TokenType.EOF
         };
 
         assertTokens(expectedTypes, tokens);
@@ -205,7 +264,6 @@ public class LexerTest {
         List<Token> tokens = lexer.scanTokens();
 
         // Must be 3 string literals + EOF
-        //assertEquals(4, tokens.size());
         assertEquals(TokenType.STRING_LITERAL, tokens.get(0).getType());
         assertEquals("Hello World", tokens.get(0).getLiteral());
 
@@ -264,14 +322,6 @@ public class LexerTest {
         String code = "int a = 5;\nstring b = \"test\";";
         lexer = new Lexer(code);
         List<Token> tokens = lexer.scanTokens();
-
-        // Printing all tokens
-        System.out.println("=== Debug Token Positions ===");
-        for (int i = 0; i < tokens.size(); i++) {
-            Token token = tokens.get(i);
-            System.out.println(i + ": " + token.getType() + " '" + token.getLexeme() +
-                    "' line=" + token.getLine() + " pos=" + token.getPosition());
-        }
 
         // Checking the first token position
         Token firstToken = tokens.get(0);
@@ -343,7 +393,7 @@ public class LexerTest {
 
     @Test
     public void testAllKeywords() {
-        String code = "int float string bool array func main return if else elif for while void";
+        String code = "int float string bool array func main return if else elif for while void struct";
         lexer = new Lexer(code);
         List<Token> tokens = lexer.scanTokens();
 
@@ -351,7 +401,7 @@ public class LexerTest {
                 TokenType.INT, TokenType.FLOAT, TokenType.STRING, TokenType.BOOL,
                 TokenType.ARRAY, TokenType.FUNC, TokenType.MAIN, TokenType.RETURN,
                 TokenType.IF, TokenType.ELSE, TokenType.ELIF, TokenType.FOR,
-                TokenType.WHILE, TokenType.VOID, TokenType.EOF
+                TokenType.WHILE, TokenType.VOID, TokenType.STRUCT, TokenType.EOF
         };
 
         assertTokens(expectedTypes, tokens);

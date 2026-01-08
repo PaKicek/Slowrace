@@ -1,0 +1,197 @@
+struct Body {
+    float x;
+    float y;
+    float z;
+    float vx;
+    float vy;
+    float vz;
+    float mass;
+}
+
+// Глобальные константы (в Slowrace нет const, используем переменные или хардкод,
+// здесь для наглядности определим значения внутри функций, где они нужны)
+// PI = 3.141592653589793
+// SOLAR_MASS = 4 * PI * PI
+// DAYS_PER_YEAR = 365.24
+
+func Body create_body(float x, float y, float z, float vx, float vy, float vz, float mass) {
+    Body b;
+    b.x = x;
+    b.y = y;
+    b.z = z;
+    b.vx = vx;
+    b.vy = vy;
+    b.vz = vz;
+    b.mass = mass;
+    return b;
+}
+
+func Body Jupiter() {
+    float solar_mass = 4 * 3.141592653589793 * 3.141592653589793;
+    float days_per_year = 365.24;
+    return create_body(
+        4.84143144246472090,
+        -1.16032004402742839,
+        -1.03622044471123109 * 0.1, // e-01
+        1.66007664274403694 * 0.001 * days_per_year, // e-03
+        7.69901118419740425 * 0.001 * days_per_year, // e-03
+        -6.90460016972063023 * 0.00001 * days_per_year, // e-05
+        9.54791938424326609 * 0.0001 * solar_mass // e-04
+    );
+}
+
+func Body Saturn() {
+    float solar_mass = 4 * 3.141592653589793 * 3.141592653589793;
+    float days_per_year = 365.24;
+    return create_body(
+        8.34336671824457987,
+        4.12479856412430479,
+        -4.03523417114321381 * 0.1,
+        -2.76742510726862411 * 0.001 * days_per_year,
+        4.99852801234917238 * 0.001 * days_per_year,
+        2.30417297573763929 * 0.00001 * days_per_year,
+        2.85885980666130812 * 0.0001 * solar_mass
+    );
+}
+
+func Body Uranus() {
+    float solar_mass = 4 * 3.141592653589793 * 3.141592653589793;
+    float days_per_year = 365.24;
+    return create_body(
+        1.28943695621391310 * 10, // e+01
+        -1.51111514016986312 * 10,
+        -2.23307578892655734 * 0.1,
+        2.96460137564761618 * 0.001 * days_per_year,
+        2.37847173959480950 * 0.001 * days_per_year,
+        -2.96589568540237556 * 0.00001 * days_per_year,
+        4.36624404335156298 * 0.00001 * solar_mass
+    );
+}
+
+func Body Neptune() {
+    float solar_mass = 4 * 3.141592653589793 * 3.141592653589793;
+    float days_per_year = 365.24;
+    return create_body(
+        1.53796971148509165 * 10,
+        -2.59193146099879641 * 10,
+        1.79258772950371181 * 0.1,
+        2.68067772490389322 * 0.001 * days_per_year,
+        1.62824170038242295 * 0.001 * days_per_year,
+        -9.51592254519715870 * 0.00001 * days_per_year,
+        5.15138902046611451 * 0.00001 * solar_mass
+    );
+}
+
+func Body Sun() {
+    float solar_mass = 4 * 3.141592653589793 * 3.141592653589793;
+    return create_body(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, solar_mass);
+}
+
+func void offset_momentum(array Body bodies) {
+    float px = 0.0;
+    float py = 0.0;
+    float pz = 0.0;
+    float solar_mass = 4 * 3.141592653589793 * 3.141592653589793;
+
+    for (int i = 0; i < len(bodies); i++) {
+        px = px + bodies[i].vx * bodies[i].mass;
+        py = py + bodies[i].vy * bodies[i].mass;
+        pz = pz + bodies[i].vz * bodies[i].mass;
+    }
+
+    bodies[0].vx = -px / solar_mass;
+    bodies[0].vy = -py / solar_mass;
+    bodies[0].vz = -pz / solar_mass;
+}
+
+func float energy(array Body bodies) {
+    float e = 0.0;
+    int size = len(bodies);
+
+    for (int i = 0; i < size; i++) {
+        e = e + 0.5 * bodies[i].mass * (bodies[i].vx * bodies[i].vx + bodies[i].vy * bodies[i].vy + bodies[i].vz * bodies[i].vz);
+
+        for (int j = i + 1; j < size; j++) {
+            float dx = bodies[i].x - bodies[j].x;
+            float dy = bodies[i].y - bodies[j].y;
+            float dz = bodies[i].z - bodies[j].z;
+
+            float distance = sqrt(dx*dx + dy*dy + dz*dz);
+            e = e - (bodies[i].mass * bodies[j].mass) / distance;
+        }
+    }
+    return e;
+}
+
+func void advance(array Body bodies, float dt) {
+    int size = len(bodies);
+
+    for (int i = 0; i < size; i++) {
+        for (int j = i + 1; j < size; j++) {
+            float dx = bodies[i].x - bodies[j].x;
+            float dy = bodies[i].y - bodies[j].y;
+            float dz = bodies[i].z - bodies[j].z;
+
+            float distance_sq = dx*dx + dy*dy + dz*dz;
+            float distance = sqrt(distance_sq);
+            float mag = dt / (distance_sq * distance);
+
+            float bim = bodies[i].mass * mag;
+            float bjm = bodies[j].mass * mag;
+
+            bodies[i].vx = bodies[i].vx - dx * bjm;
+            bodies[i].vy = bodies[i].vy - dy * bjm;
+            bodies[i].vz = bodies[i].vz - dz * bjm;
+
+            bodies[j].vx = bodies[j].vx + dx * bim;
+            bodies[j].vy = bodies[j].vy + dy * bim;
+            bodies[j].vz = bodies[j].vz + dz * bim;
+        }
+    }
+
+    for (int i = 0; i < size; i++) {
+        bodies[i].x = bodies[i].x + dt * bodies[i].vx;
+        bodies[i].y = bodies[i].y + dt * bodies[i].vy;
+        bodies[i].z = bodies[i].z + dt * bodies[i].vz;
+    }
+}
+
+func array Body init_system() {
+    array Body bodies[5];
+    bodies[0] = Sun();
+    bodies[1] = Jupiter();
+    bodies[2] = Saturn();
+    bodies[3] = Uranus();
+    bodies[4] = Neptune();
+
+    offset_momentum(bodies);
+    return bodies;
+}
+
+main (int argc, array string argv[]) {
+    float ret = 0.0;
+
+    for (int n = 3; n <= 24; n = n * 2) {
+        array Body bodies[5] = init_system();
+        int max = n * 100;
+
+        ret = ret + energy(bodies);
+
+        for (int i = 0; i < max; i++) {
+            advance(bodies, 0.01);
+        }
+
+        ret = ret + energy(bodies);
+    }
+
+    float expected = -1.3524862408537381;
+
+    if (ret != expected) {
+        print("ERROR: bad result: expected ");
+        print(expected);
+        print(" but got ");
+        println(ret);
+    } else {
+        println("Result matches expected value.");
+    }
+}

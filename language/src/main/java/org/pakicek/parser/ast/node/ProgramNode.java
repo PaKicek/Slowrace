@@ -8,11 +8,13 @@ import java.util.List;
 // Represents the entire program
 public class ProgramNode extends ASTNode {
     private final List<FunctionDeclarationNode> functions;
+    private final List<StructDeclarationNode> structs;
     private MainNode mainNode;
 
     public ProgramNode(int line, int position) {
         super(line, position);
         this.functions = new ArrayList<>();
+        this.structs = new ArrayList<>();
     }
 
     public List<FunctionDeclarationNode> getFunctions() {
@@ -21,6 +23,15 @@ public class ProgramNode extends ASTNode {
 
     public void addFunction(FunctionDeclarationNode function) {
         functions.add(function);
+    }
+
+    // Methods for structs
+    public List<StructDeclarationNode> getStructs() {
+        return structs;
+    }
+
+    public void addStruct(StructDeclarationNode struct) {
+        structs.add(struct);
     }
 
     public MainNode getMainNode() {

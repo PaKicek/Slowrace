@@ -28,6 +28,7 @@ public class ASTStructureTest {
             f = -a;           // unary expression
             g = test();       // function call
             h = arr[0];       // array access
+            i = obj.field;    // field access
         }
         """;
 
@@ -45,7 +46,8 @@ public class ASTStructureTest {
                 BinaryExpressionNode.class, // a + b
                 UnaryExpressionNode.class,  // -a
                 FunctionCallNode.class,     // test()
-                ArrayAccessNode.class       // arr[0]
+                ArrayAccessNode.class,      // arr[0]
+                FieldAccessNode.class       // obj.field
         };
 
         for (int i = 0; i < expectedTypes.length; i++) {
@@ -80,7 +82,7 @@ public class ASTStructureTest {
     @Test
     public void testTypeNodes() {
         String code = """
-            func void test(int a, float b, string c, bool d, array int e[], array bool f[10]) {
+            func void test(int a, float b, string c, bool d, array int e[], array bool f[10], Point p) {
                 array string dynamic[size];
             }
             """;
@@ -101,9 +103,64 @@ public class ASTStructureTest {
         assertTrue(function.getParameters().get(4).getType() instanceof ArrayTypeNode);
         assertTrue(function.getParameters().get(5).getType() instanceof ArrayTypeNode);
 
+        // Check struct type
+        assertTrue(function.getParameters().get(6).getType() instanceof StructTypeNode);
+        assertEquals("Point", ((StructTypeNode) function.getParameters().get(6).getType()).getStructName());
+
         // Print using detailed printer
         ASTPrinter detailedPrinter = new ASTPrinter();
         System.out.println("=== Detailed AST ===");
+        System.out.println(detailedPrinter.print(program));
+    }
+
+    @Test
+    public void testStructsAndFieldAccess() {
+        String code = """
+            struct Point {
+                float x;
+                float y;
+            }
+
+            func void move(Point p) {
+                p.x = p.x + 1.0;
+                p.y = p.y + 1.0;
+            }
+            """;
+
+        List<Token> tokens = new Lexer(code).scanTokens();
+        Parser parser = new Parser(tokens);
+        ProgramNode program = parser.parse();
+
+        // Check struct availability
+        assertEquals(1, program.getStructs().size());
+        StructDeclarationNode struct = program.getStructs().get(0);
+        assertEquals("Point", struct.getName());
+        assertEquals(2, struct.getFields().size());
+        assertEquals("x", struct.getFields().get(0).getName());
+        assertEquals("float", ((BasicTypeNode) struct.getFields().get(0).getType()).getTypeName());
+
+        // Check function and parameter types
+        assertEquals(1, program.getFunctions().size());
+        FunctionDeclarationNode func = program.getFunctions().get(0);
+        assertEquals("move", func.getName());
+        assertTrue(func.getParameters().get(0).getType() instanceof StructTypeNode);
+        assertEquals("Point", ((StructTypeNode) func.getParameters().get(0).getType()).getStructName());
+
+        // Check access to struct fields in function body
+        // p.x = p.x + 1.0;
+        ExpressionStatementNode stmt = (ExpressionStatementNode) func.getBody().getStatements().get(0);
+        AssignmentNode assign = (AssignmentNode) stmt.getExpression();
+
+        // Left side: p.x (FieldAccessNode)
+        assertTrue(assign.getTarget() instanceof FieldAccessNode);
+        FieldAccessNode fieldAccess = (FieldAccessNode) assign.getTarget();
+        assertEquals("x", fieldAccess.getFieldName());
+        assertTrue(fieldAccess.getObject() instanceof VariableNode);
+        assertEquals("p", ((VariableNode) fieldAccess.getObject()).getName());
+
+        // Detailed print
+        ASTPrinter detailedPrinter = new ASTPrinter();
+        System.out.println("=== Detailed Struct AST ===");
         System.out.println(detailedPrinter.print(program));
     }
 }

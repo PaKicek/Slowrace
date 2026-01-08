@@ -172,4 +172,44 @@ public class ParserExamplesTest {
         IfStatementNode ifStmt = (IfStatementNode) body.getStatements().get(0);
         assertTrue(ifStmt.getCondition() instanceof BinaryExpressionNode);
     }
+
+    @Test
+    public void testNBodyExample() {
+        String code = """
+            struct Body {
+                float x;
+                float y;
+                float z;
+                float vx;
+                float vy;
+                float vz;
+                float mass;
+            }
+
+            func Body create_body(float x, float y, float z, float vx, float vy, float vz, float mass) {
+                Body b;
+                b.x = x;
+                // ... rest of initialization
+                return b;
+            }
+        
+            main (int argc, array string argv[]) {
+                array Body bodies[5];
+                bodies[0].x = 0.0;
+            }
+        """;
+
+        List<Token> tokens = new Lexer(code).scanTokens();
+        Parser parser = new Parser(tokens);
+        ProgramNode program = parser.parse();
+
+        assertNotNull(program);
+        assertEquals(1, program.getStructs().size());
+        assertEquals(1, program.getFunctions().size());
+        assertNotNull(program.getMainNode());
+
+        StructDeclarationNode bodyStruct = program.getStructs().get(0);
+        assertEquals("Body", bodyStruct.getName());
+        assertEquals(7, bodyStruct.getFields().size());
+    }
 }

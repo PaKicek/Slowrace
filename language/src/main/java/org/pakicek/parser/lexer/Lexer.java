@@ -30,6 +30,7 @@ public class Lexer {
         // Keywords
         keywords.put("array", TokenType.ARRAY);
         keywords.put("func", TokenType.FUNC);
+        keywords.put("struct", TokenType.STRUCT);
         keywords.put("main", TokenType.MAIN);
         keywords.put("return", TokenType.RETURN);
         keywords.put("if", TokenType.IF);
@@ -71,6 +72,7 @@ public class Lexer {
             case ']': addToken(TokenType.RIGHT_BRACKET); break;
             case ',': addToken(TokenType.COMMA); break;
             case ';': addToken(TokenType.SEMICOLON); break;
+            case '.': addToken(TokenType.DOT); break;
 
             // Operators
             case '+':

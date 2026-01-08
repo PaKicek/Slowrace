@@ -38,4 +38,10 @@ public class TokenTest {
         assertTrue(toString.contains("line=3"));
         assertTrue(toString.contains("position=10"));
     }
+
+    @Test
+    public void testStructToken() {
+        Token token = new Token(TokenType.STRUCT, "struct", null, 1, 1);
+        assertEquals(TokenType.STRUCT, token.getType());
+    }
 }

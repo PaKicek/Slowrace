@@ -3,7 +3,7 @@ package org.pakicek.parser.lexer;
 public enum TokenType {
     // Keywords
     INT, FLOAT, STRING, BOOL, VOID, ARRAY, FUNC, MAIN, RETURN,
-    IF, ELSE, ELIF, FOR, WHILE,
+    IF, ELSE, ELIF, FOR, WHILE, STRUCT,
 
     // Literals
     INTEGER_LITERAL, FLOAT_LITERAL, STRING_LITERAL, BOOLEAN_LITERAL,
@@ -16,7 +16,7 @@ public enum TokenType {
     EQUALS, NOT_EQUALS, GREATER, LESS, GREATER_EQUAL, LESS_EQUAL,
     AND, OR, NOT, BITWISE_AND, BITWISE_OR,
     INCREMENT, DECREMENT,
-    ASSIGN,
+    ASSIGN, DOT,
 
     // Separators
     LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,

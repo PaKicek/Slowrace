@@ -1,0 +1,46 @@
+func int partition (array int arr, int low, int high) { // up to 10000 elements
+    int pivot = arr[high];
+    int i = low - 1;
+    for (int j = low; j < high; j++) {
+        if (arr[j] < pivot) {
+            i++;
+            int temp = arr[i];
+            arr[i] = arr[j];
+            arr[j] = temp;
+        }
+    }
+    int temp = arr[i + 1];
+    arr[i + 1] = arr[high];
+    arr[high] = temp;
+    return i + 1;
+}
+
+func void quick_sort_recursive (array int arr, int low, int high) {
+    if (low < high) {
+        int pi = partition(arr, low, high);
+        quick_sort_recursive(arr, low, pi - 1);
+        quick_sort_recursive(arr, pi + 1, high);
+    }
+}
+
+func array int quick_sort (array int arr) {
+    quick_sort_recursive(arr, 0, len(arr) - 1);
+    return arr;
+}
+
+main (int argc, array string argv[]) {
+    array int numbers[10] = [10, 7, 8, 9, 1, 5, -2, 0, 4, 3];
+    print("Original array: ");
+    for (int i = 0; i < len(numbers); i++) {
+        print(numbers[i]);
+        print(" ");
+    }
+    println("");
+    array int result[10] = quick_sort(numbers);
+    print("Sorted array: ");
+    for (int i = 0; i < len(result); i++) {
+        print(result[i]);
+        print(" ");
+    }
+    println("");
+}

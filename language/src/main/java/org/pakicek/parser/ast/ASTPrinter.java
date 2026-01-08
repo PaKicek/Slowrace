@@ -6,6 +6,7 @@ import org.pakicek.parser.ast.node.expression.literal.*;
 import org.pakicek.parser.ast.node.statement.*;
 import org.pakicek.parser.ast.node.type.ArrayTypeNode;
 import org.pakicek.parser.ast.node.type.BasicTypeNode;
+import org.pakicek.parser.ast.node.type.StructTypeNode;
 
 public class ASTPrinter implements ASTVisitor<String> {
     private int indentLevel = 0;
@@ -27,8 +28,39 @@ public class ASTPrinter implements ASTVisitor<String> {
         output.append(text).append("\n");
     }
 
-    private void print(String text) {
-        output.append(text);
+    // Root & Declarations
+
+    @Override
+    public String visit(ProgramNode node) {
+        println("Program");
+        indentLevel++;
+
+        // First print structures
+        if (!node.getStructs().isEmpty()) {
+            println("Structs:");
+            indentLevel++;
+            for (StructDeclarationNode struct : node.getStructs()) {
+                struct.accept(this);
+            }
+            indentLevel--;
+        }
+
+        // Then functions
+        if (!node.getFunctions().isEmpty()) {
+            println("Functions:");
+            indentLevel++;
+            for (FunctionDeclarationNode function : node.getFunctions()) {
+                function.accept(this);
+            }
+            indentLevel--;
+        }
+
+        if (node.getMainNode() != null) {
+            node.getMainNode().accept(this);
+        }
+
+        indentLevel--;
+        return output.toString();
     }
 
     @Override
@@ -49,24 +81,6 @@ public class ASTPrinter implements ASTVisitor<String> {
 
         indentLevel--;
         return "";
-    }
-
-    // Program structure
-    @Override
-    public String visit(ProgramNode node) {
-        println("Program");
-        indentLevel++;
-
-        for (FunctionDeclarationNode function : node.getFunctions()) {
-            function.accept(this);
-        }
-
-        if (node.getMainNode() != null) {
-            node.getMainNode().accept(this);
-        }
-
-        indentLevel--;
-        return output.toString();
     }
 
     @Override
@@ -106,10 +120,38 @@ public class ASTPrinter implements ASTVisitor<String> {
         return "";
     }
 
+    @Override
+    public String visit(StructDeclarationNode node) {
+        println("Struct Declaration: " + node.getName());
+        indentLevel++;
+
+        if (!node.getFields().isEmpty()) {
+            println("Fields:");
+            indentLevel++;
+            for (VariableDeclarationNode field : node.getFields()) {
+                // Structure fields are VariableDeclarationNode
+                field.accept(this);
+            }
+            indentLevel--;
+        } else {
+            println("Fields: empty");
+        }
+
+        indentLevel--;
+        return "";
+    }
+
     // Types
+
     @Override
     public String visit(BasicTypeNode node) {
         println("Type: " + node.getTypeName());
+        return "";
+    }
+
+    @Override
+    public String visit(StructTypeNode node) {
+        println("Struct Type: " + node.getStructName());
         return "";
     }
 
@@ -142,6 +184,7 @@ public class ASTPrinter implements ASTVisitor<String> {
     }
 
     // Statements
+
     @Override
     public String visit(BlockStatementNode node) {
         println("Block");
@@ -318,6 +361,7 @@ public class ASTPrinter implements ASTVisitor<String> {
     }
 
     // Expressions
+
     @Override
     public String visit(BinaryExpressionNode node) {
         println("Binary Expression: " + node.getOperator());
@@ -391,6 +435,21 @@ public class ASTPrinter implements ASTVisitor<String> {
     }
 
     @Override
+    public String visit(FieldAccessNode node) {
+        println("Field Access");
+        indentLevel++;
+
+        println("Object:");
+        indentLevel++;
+        node.getObject().accept(this); // Left part (variable, array, etc.)
+        indentLevel--;
+
+        println("Field: " + node.getFieldName()); // Field name
+        indentLevel--;
+        return "";
+    }
+
+    @Override
     public String visit(ArrayLiteralNode node) {
         println("Array Literal");
         indentLevel++;
@@ -417,6 +476,7 @@ public class ASTPrinter implements ASTVisitor<String> {
     }
 
     // Literals
+
     @Override
     public String visit(IntegerLiteralNode node) {
         println("Integer Literal: " + node.getValue());

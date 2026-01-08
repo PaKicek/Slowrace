@@ -4,9 +4,7 @@ import org.pakicek.parser.ast.node.*;
 import org.pakicek.parser.ast.node.expression.*;
 import org.pakicek.parser.ast.node.expression.literal.*;
 import org.pakicek.parser.ast.node.statement.*;
-import org.pakicek.parser.ast.node.type.ArrayTypeNode;
-import org.pakicek.parser.ast.node.type.BasicTypeNode;
-import org.pakicek.parser.ast.node.type.TypeNode;
+import org.pakicek.parser.ast.node.type.*;
 import org.pakicek.parser.lexer.Token;
 import org.pakicek.parser.lexer.TokenType;
 
@@ -30,12 +28,38 @@ public class Parser {
             } else if (match(TokenType.MAIN)) {
                 MainNode mainNode = parseMain();
                 program.setMainNode(mainNode);
+            } else if (match(TokenType.STRUCT)) {
+                StructDeclarationNode struct = parseStructDeclaration();
+                program.addStruct(struct);
             } else {
-                throw error(peek(), "Expected function or main declaration");
+                throw error(peek(), "Expected function, main, or struct declaration");
             }
         }
 
         return program;
+    }
+
+    private StructDeclarationNode parseStructDeclaration() {
+        Token structToken = previous();
+        Token name = consume(TokenType.IDENTIFIER, "Expected struct name");
+        consume(TokenType.LEFT_BRACE, "Expected '{' before struct body");
+
+        StructDeclarationNode structNode = new StructDeclarationNode(name.getLexeme(), structToken.getLine(), structToken.getPosition());
+
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            // Struct fields are parsed as variable declarations
+            // Type Name;
+            TypeNode type = parseType();
+            Token fieldName = consume(TokenType.IDENTIFIER, "Expected field name");
+            consume(TokenType.SEMICOLON, "Expected ';' after field declaration");
+
+            structNode.addField(new VariableDeclarationNode(
+                    fieldName.getLexeme(), type, fieldName.getLine(), fieldName.getPosition()
+            ));
+        }
+
+        consume(TokenType.RIGHT_BRACE, "Expected '}' after struct body");
+        return structNode;
     }
 
     private FunctionDeclarationNode parseFunctionDeclaration() {
@@ -123,21 +147,10 @@ public class Parser {
             return new ArrayTypeNode(elementType, (Integer) null, token.getLine(), token.getPosition());
         } else if (isBasicType(token.getType())) {
             return new BasicTypeNode(token.getLexeme(), token.getLine(), token.getPosition());
+        } else if (token.getType() == TokenType.IDENTIFIER) {
+            return new StructTypeNode(token.getLexeme(), token.getLine(), token.getPosition());
         } else {
             current--;
-            throw error(token, "Expected type");
-        }
-    }
-
-    private TypeNode parseBaseType() {
-        Token token = advance();
-
-        if (token.getType() == TokenType.ARRAY) {
-            TypeNode elementType = parseBaseType();
-            return new ArrayTypeNode(elementType, (Integer) null, token.getLine(), token.getPosition());
-        } else if (isBasicType(token.getType())) {
-            return new BasicTypeNode(token.getLexeme(), token.getLine(), token.getPosition());
-        } else {
             throw error(token, "Expected type");
         }
     }
@@ -150,12 +163,21 @@ public class Parser {
         if (match(TokenType.LEFT_BRACE)) return parseBlockStatement();
 
         // Variable declaration or assignment
-        if (isType(peek().getType())) {
+        if (isStatementDeclaration()) {
             return parseVariableDeclaration();
         }
 
         // Expression statement
         return parseExpressionStatement();
+    }
+
+    private boolean isStatementDeclaration() {
+        // Check built-in types
+        if (isTypeKeyword(peek().getType())) return true;
+
+        // Check user-defined types (StructName variableName;)
+        // If current token is ID and next token is ID, it is a declaration like "Point p;"
+        return peek().getType() == TokenType.IDENTIFIER && peekNext().getType() == TokenType.IDENTIFIER;
     }
 
     private IfStatementNode parseIfStatement() {
@@ -194,7 +216,7 @@ public class Parser {
         StatementNode initialization;
         if (match(TokenType.SEMICOLON)) {
             initialization = null;
-        } else if (isType(peek().getType())) {
+        } else if (isStatementDeclaration()) {
             initialization = parseVariableDeclaration();
         } else {
             initialization = parseExpressionStatement();
@@ -264,7 +286,7 @@ public class Parser {
     }
 
     private VariableDeclarationNode parseVariableDeclaration() {
-        TypeNode type = parseBaseType();
+        TypeNode type = parseType(); // Use parseType, which now understands structs as well
         Token name = consume(TokenType.IDENTIFIER, "Expected variable name");
 
         // Check for array size
@@ -331,7 +353,9 @@ public class Parser {
             Token equals = previous();
             ExpressionNode value = parseAssignment();
 
-            if (expression instanceof VariableNode || expression instanceof ArrayAccessNode) {
+            if (expression instanceof VariableNode ||
+                    expression instanceof ArrayAccessNode ||
+                    expression instanceof FieldAccessNode) {
                 return new AssignmentNode(expression, value, equals.getLine(), equals.getPosition());
             }
 
@@ -422,8 +446,7 @@ public class Parser {
     }
 
     private ExpressionNode parseUnary() {
-        if (match(TokenType.NOT, TokenType.MINUS)) {
-            // Prefix operators: !x, -x
+        if (match(TokenType.NOT, TokenType.MINUS, TokenType.NOT)) {
             Token operator = previous();
             ExpressionNode right = parseUnary();
             return new UnaryExpressionNode(operator.getLexeme(), right,
@@ -431,16 +454,37 @@ public class Parser {
         }
 
         if (match(TokenType.INCREMENT, TokenType.DECREMENT)) {
-            // Prefix operators: ++x, --x
             Token operator = previous();
             ExpressionNode right = parseUnary();
             return new UnaryExpressionNode(operator.getLexeme(), right,
                     operator.getLine(), operator.getPosition());
         }
 
+        return parseCallAndAccess();
+    }
+
+    private ExpressionNode parseCallAndAccess() {
         ExpressionNode expr = parsePrimary();
 
-        // Check postfix operators after primary expression
+        while (true) {
+            if (match(TokenType.LEFT_PAREN)) {
+                expr = finishCall(expr);
+            } else if (match(TokenType.LEFT_BRACKET)) {
+                Token bracket = previous();
+                ExpressionNode index = parseExpression();
+                consume(TokenType.RIGHT_BRACKET, "Expected ']' after array index");
+                expr = new ArrayAccessNode(expr, index, bracket.getLine(), bracket.getPosition());
+            } else if (match(TokenType.DOT)) {
+                // Handle dot operator
+                Token dot = previous();
+                Token field = consume(TokenType.IDENTIFIER, "Expected field name after '.'");
+                expr = new FieldAccessNode(expr, field.getLexeme(), dot.getLine(), dot.getPosition());
+            } else {
+                break;
+            }
+        }
+
+        // Postfix increments/decrements (a++)
         while (match(TokenType.INCREMENT, TokenType.DECREMENT)) {
             Token operator = previous();
             expr = new UnaryExpressionNode(operator.getLexeme(), expr,
@@ -450,10 +494,33 @@ public class Parser {
         return expr;
     }
 
+    private ExpressionNode finishCall(ExpressionNode callee) {
+        // The AST only supports calling functions by name (String),
+        // so the callee must be a VariableNode (identifier).
+        if (!(callee instanceof VariableNode)) {
+            throw error(peek(), "Can only call named functions");
+        }
+
+        String funcName = ((VariableNode) callee).getName();
+        FunctionCallNode call = new FunctionCallNode(funcName, callee.getLine(), callee.getPosition());
+
+        if (!check(TokenType.RIGHT_PAREN)) {
+            do {
+                ExpressionNode argument = parseExpression();
+                call.addArgument(argument);
+            } while (match(TokenType.COMMA));
+        }
+
+        consume(TokenType.RIGHT_PAREN, "Expected ')' after function arguments");
+        return call;
+    }
+
     private ExpressionNode parsePrimary() {
         if (match(TokenType.BOOLEAN_LITERAL)) {
             Token token = previous();
-            boolean value = Boolean.parseBoolean(token.getLexeme());
+            // Lexer returns Boolean object in literal, or null and we parse text
+            Object literal = token.getLiteral();
+            boolean value = (literal instanceof Boolean) ? (Boolean) literal : Boolean.parseBoolean(token.getLexeme());
             return new BooleanLiteralNode(value, token.getLine(), token.getPosition());
         }
         if (match(TokenType.INTEGER_LITERAL)) {
@@ -478,42 +545,10 @@ public class Parser {
         }
         if (match(TokenType.IDENTIFIER)) {
             Token identifier = previous();
-
-            // Check if this is a function call or array access
-            if (match(TokenType.LEFT_PAREN)) {
-                return parseFunctionCall(identifier);
-            } else if (match(TokenType.LEFT_BRACKET)) {
-                return parseArrayAccess(identifier);
-            }
-
             return new VariableNode(identifier.getLexeme(), identifier.getLine(), identifier.getPosition());
         }
 
         throw error(peek(), "Expected expression");
-    }
-
-    private ExpressionNode parseFunctionCall(Token identifier) {
-        FunctionCallNode call = new FunctionCallNode(identifier.getLexeme(),
-                identifier.getLine(), identifier.getPosition());
-
-        if (!check(TokenType.RIGHT_PAREN)) {
-            do {
-                ExpressionNode argument = parseExpression();
-                call.addArgument(argument);
-            } while (match(TokenType.COMMA));
-        }
-
-        consume(TokenType.RIGHT_PAREN, "Expected ')' after function arguments");
-        return call;
-    }
-
-    private ExpressionNode parseArrayAccess(Token identifier) {
-        ExpressionNode index = parseExpression();
-        consume(TokenType.RIGHT_BRACKET, "Expected ']' after array index");
-
-        VariableNode array = new VariableNode(identifier.getLexeme(),
-                identifier.getLine(), identifier.getPosition());
-        return new ArrayAccessNode(array, index, identifier.getLine(), identifier.getPosition());
     }
 
     private ExpressionNode parseArrayLiteral() {
@@ -552,6 +587,12 @@ public class Parser {
         return peek().getType() == type;
     }
 
+    // Helper to peek next token
+    private Token peekNext() {
+        if (current + 1 >= tokens.size()) return tokens.get(tokens.size() - 1);
+        return tokens.get(current + 1);
+    }
+
     private Token advance() {
         if (!isAtEnd()) current++;
         return previous();
@@ -569,7 +610,7 @@ public class Parser {
         return tokens.get(current - 1);
     }
 
-    private boolean isType(TokenType type) {
+    private boolean isTypeKeyword(TokenType type) {
         return type == TokenType.INT || type == TokenType.FLOAT ||
                 type == TokenType.STRING || type == TokenType.BOOL ||
                 type == TokenType.VOID || type == TokenType.ARRAY;
