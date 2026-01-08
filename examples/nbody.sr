@@ -8,8 +8,7 @@ struct Body {
     float mass;
 }
 
-// Глобальные константы (в Slowrace нет const, используем переменные или хардкод,
-// здесь для наглядности определим значения внутри функций, где они нужны)
+// Global constants (Slowrace does not have const, so we use variables in functions instead)
 // PI = 3.141592653589793
 // SOLAR_MASS = 4 * PI * PI
 // DAYS_PER_YEAR = 365.24
