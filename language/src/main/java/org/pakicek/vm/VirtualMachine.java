@@ -14,6 +14,7 @@ public class VirtualMachine {
     private final Heap heap = new Heap();
     private final GarbageCollector gc;
     private final JitCompiler jit = new JitCompiler();
+    private final Random random = new Random();
 
     // Global registry for functions (Name -> Bytecode Chunk)
     private final Map<String, Chunk> functions = new HashMap<>();
@@ -281,6 +282,26 @@ public class VirtualMachine {
                         stack.push(new SrValue(new BigInteger(val.asString())));
                     } catch (NumberFormatException e) {
                         throw new RuntimeException("Type Error: Cannot convert to int: " + val);
+                    }
+                }
+                case RANDOM -> {
+                    // Stack: [min, max] (max is top)
+                    BigInteger max = stack.pop().asInt();
+                    BigInteger min = stack.pop().asInt();
+
+                    // range = max - min
+                    BigInteger range = max.subtract(min);
+
+                    if (range.signum() <= 0) {
+                        stack.push(new SrValue(min));
+                    } else {
+                        BigInteger res;
+                        do {
+                            res = new BigInteger(range.bitLength(), random);
+                        } while (res.compareTo(range) >= 0);
+
+                        // Result = min + random_offset
+                        stack.push(new SrValue(min.add(res)));
                     }
                 }
 

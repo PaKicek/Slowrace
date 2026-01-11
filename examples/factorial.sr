@@ -9,7 +9,9 @@ main (int argc, array string argv[]) {
     if (argc >= 1) {
         int n = to_int(argv[0]);
         int result = factorial(n);
-        print("Factorial of the number is ");
+        print("Factorial of the number ");
+        print(n);
+        print(" is ");
         println(result);
     } else {
         println("No number is passed");

@@ -1,4 +1,4 @@
-func int partition (array int arr, int low, int high) { // up to 10000 elements
+func int partition (array int arr, int low, int high) {
     int pivot = arr[high];
     int i = low - 1;
     for (int j = low; j < high; j++) {
@@ -29,18 +29,28 @@ func array int quick_sort (array int arr) {
 }
 
 main (int argc, array string argv[]) {
-    array int numbers[10] = [10, 7, 8, 9, 1, 5, -2, 0, 4, 3];
-    print("Original array: ");
-    for (int i = 0; i < len(numbers); i++) {
-        print(numbers[i]);
-        print(" ");
+    if (argc >= 3) {
+        int count = to_int(argv[0]);
+        int min_val = to_int(argv[1]);
+        int max_val = to_int(argv[2]);
+        array int numbers[count];
+        for (int i = 0; i < count; i++) {
+            numbers[i] = random(min_val, max_val);
+        }
+        print("Original array: ");
+        for (int i = 0; i < len(numbers); i++) {
+            print(numbers[i]);
+            print(" ");
+        }
+        println("");
+        array int result[count] = quick_sort(numbers);
+        print("Sorted array: ");
+        for (int i = 0; i < len(result); i++) {
+            print(result[i]);
+            print(" ");
+        }
+        println("");
+    } else {
+        println("Usage: quick_sort <count> <min> <max>");
     }
-    println("");
-    array int result[10] = quick_sort(numbers);
-    print("Sorted array: ");
-    for (int i = 0; i < len(result); i++) {
-        print(result[i]);
-        print(" ");
-    }
-    println("");
 }

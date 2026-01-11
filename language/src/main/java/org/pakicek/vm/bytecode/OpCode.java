@@ -43,6 +43,7 @@ public enum OpCode {
     PRINTLN,
     SQRT,
     TO_INT,
+    RANDOM,
 
     // System
     HALT

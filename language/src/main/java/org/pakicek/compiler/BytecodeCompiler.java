@@ -463,6 +463,15 @@ public class BytecodeCompiler implements ASTVisitor<Void> {
                 currentChunk.emit(OpCode.TO_INT, node.getLine());
                 return null;
             }
+            case "random" -> {
+                if (node.getArguments().size() != 2) {
+                    throw new RuntimeException("random() expects 2 arguments: min and max");
+                }
+                node.getArguments().get(0).accept(this); // Pushes min
+                node.getArguments().get(1).accept(this); // Pushes max
+                currentChunk.emit(OpCode.RANDOM, node.getLine());
+                return null;
+            }
         }
 
         for (ExpressionNode arg : node.getArguments()) {
