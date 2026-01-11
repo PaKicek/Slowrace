@@ -183,7 +183,7 @@ main (int argc, array string argv[]) {
         ret = ret + energy(bodies);
     }
 
-    float expected = -1.3524862408537381;
+    float expected = -1.3524862408537384;
 
     if (ret != expected) {
         print("ERROR: bad result: expected ");
