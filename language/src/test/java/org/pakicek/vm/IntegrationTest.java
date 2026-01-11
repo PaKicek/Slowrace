@@ -36,7 +36,17 @@ public class IntegrationTest {
         BytecodeCompiler compiler = new BytecodeCompiler();
         ProgramImage image = compiler.compile(program);
         VirtualMachine vm = new VirtualMachine();
-        vm.run(image);
+        vm.run(image, new String[0]);
+    }
+
+    private void runCode(String code, String[] args) {
+        List<Token> tokens = new Lexer(code).scanTokens();
+        Parser parser = new Parser(tokens);
+        ProgramNode program = parser.parse();
+        BytecodeCompiler compiler = new BytecodeCompiler();
+        ProgramImage image = compiler.compile(program);
+        VirtualMachine vm = new VirtualMachine();
+        vm.run(image, args);
     }
 
     @Test
@@ -69,16 +79,19 @@ public class IntegrationTest {
 
     @Test
     public void testBigIntFactorial() {
-        // Calculation of 21! inside main loop (simplified as no function calls support in compiler test yet
-        // or assumes function inlining/logic in main)
-        // Since global functions require registration in VM, let's test logic in main.
+        // Calculation of 21! inside main loop
         String code = """
+            func int factorial (int n) {
+                int result = 1;
+                for (int i = 2; i <= n; i++) {
+                        result = result * i;
+                    }
+                return result;
+            }
+        
             main (int argc, array string argv[]) {
                 int n = 21;
-                int res = 1;
-                for (int i = 1; i <= n; i++) {
-                    res = res * i;
-                }
+                int res = factorial(n);
                 print(res);
             }
         """;
@@ -153,5 +166,18 @@ public class IntegrationTest {
         // testing full recursion requires expanding BytecodeCompiler to register functions in VM.
         // For this test suite, we will stick to Main-body logic which is fully implemented.
         assertTrue(true);
+    }
+
+    @Test
+    public void testCommandLineArgs() {
+        String code = """
+            main (int argc, array string argv[]) {
+                if (argc > 0) {
+                    print(argv[0]);
+                }
+            }
+        """;
+        runCode(code, new String[]{"Hello"});
+        assertEquals("Hello", outContent.toString().trim());
     }
 }

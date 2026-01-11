@@ -40,6 +40,7 @@ public enum OpCode {
 
     // Built-ins
     PRINT,
+    PRINTLN,
     SQRT,
     TO_INT,
 

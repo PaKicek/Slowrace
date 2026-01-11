@@ -7,8 +7,8 @@ func int factorial (int n) { // up to 20!
 }
 
 main (int argc, array string argv[]) {
-    if (argc >= 2) {
-        int n = to_int(argv[1]);
+    if (argc >= 1) {
+        int n = to_int(argv[0]);
         int result = factorial(n);
         print("Factorial of the number is ");
         println(result);

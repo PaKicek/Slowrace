@@ -432,27 +432,37 @@ public class BytecodeCompiler implements ASTVisitor<Void> {
         String name = node.getFunctionName();
 
         switch (name) {
-            case "print":
-            case "println":
+            case "print" -> {
                 for (ExpressionNode arg : node.getArguments()) arg.accept(this);
                 currentChunk.emit(OpCode.PRINT, node.getLine());
-                // Built-in print is void. Push VOID.
                 int vIdx = currentChunk.addConstant(SrValue.VOID);
                 currentChunk.emit(OpCode.LOAD_CONST, node.getLine());
                 currentChunk.emitByte(vIdx, node.getLine());
                 return null;
-            case "len":
+            }
+            case "println" -> {
+                for (ExpressionNode arg : node.getArguments()) arg.accept(this);
+                currentChunk.emit(OpCode.PRINTLN, node.getLine());
+                int vIdx = currentChunk.addConstant(SrValue.VOID);
+                currentChunk.emit(OpCode.LOAD_CONST, node.getLine());
+                currentChunk.emitByte(vIdx, node.getLine());
+                return null;
+            }
+            case "len" -> {
                 node.getArguments().get(0).accept(this);
                 currentChunk.emit(OpCode.LEN, node.getLine());
                 return null;
-            case "sqrt":
+            }
+            case "sqrt" -> {
                 node.getArguments().get(0).accept(this);
                 currentChunk.emit(OpCode.SQRT, node.getLine());
                 return null;
-            case "to_int":
+            }
+            case "to_int" -> {
                 node.getArguments().get(0).accept(this);
                 currentChunk.emit(OpCode.TO_INT, node.getLine());
                 return null;
+            }
         }
 
         for (ExpressionNode arg : node.getArguments()) {
@@ -521,12 +531,45 @@ public class BytecodeCompiler implements ASTVisitor<Void> {
 
     @Override
     public Void visit(ArrayLiteralNode node) {
-        // Push size
-        int idx = currentChunk.addConstant(new SrValue(BigInteger.valueOf(node.getElements().size())));
-        currentChunk.emit(OpCode.LOAD_CONST, node.getLine());
-        currentChunk.emitByte(idx, node.getLine());
+        List<ExpressionNode> elements = node.getElements();
+        int size = elements.size();
 
+        // 1. Push size
+        int sizeIdx = currentChunk.addConstant(new SrValue(BigInteger.valueOf(size)));
+        currentChunk.emit(OpCode.LOAD_CONST, node.getLine());
+        currentChunk.emitByte(sizeIdx, node.getLine());
+
+        // 2. Create Array. Stack: [ArrayRef]
         currentChunk.emit(OpCode.NEW_ARRAY, node.getLine());
+
+        // 3. Initialize elements
+        for (int i = 0; i < size; i++) {
+            // Stack transformation goal: [ArrayRef, ArrayRef, Index, Value] -> SET_ARRAY
+
+            // a. Duplicate Array Reference (to keep one for the result and next iterations)
+            // Stack: [ArrayRef, ArrayRef]
+            currentChunk.emit(OpCode.DUP, node.getLine());
+
+            // b. Push Index
+            // Stack: [ArrayRef, ArrayRef, i]
+            int idxConst = currentChunk.addConstant(new SrValue(BigInteger.valueOf(i)));
+            currentChunk.emit(OpCode.LOAD_CONST, node.getLine());
+            currentChunk.emitByte(idxConst, node.getLine());
+
+            // c. Evaluate Expression (Value)
+            // Stack: [ArrayRef, ArrayRef, i, Val]
+            elements.get(i).accept(this);
+
+            // d. Set Array
+            // Stack: [ArrayRef, Val] (Because VM pushes Val back after set)
+            currentChunk.emit(OpCode.SET_ARRAY, node.getLine());
+
+            // e. Pop the value returned by SET_ARRAY, leaving just the original ArrayRef
+            // Stack: [ArrayRef]
+            currentChunk.emit(OpCode.POP, node.getLine());
+        }
+
+        // Result on stack: [ArrayRef]
         return null;
     }
 

@@ -32,7 +32,7 @@ public class SrValue {
     }
 
     public String asString() {
-        return (String) value;
+        return value == null ? "void" : value.toString();
     }
 
     public SrObject asObject() {
