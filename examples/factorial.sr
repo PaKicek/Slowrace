@@ -11,9 +11,9 @@ main (int argc, array string argv[]) {
         int result = factorial(n);
         print("Factorial of the number ");
         print(n);
-        print(" is ");
+        print(": ");
         println(result);
     } else {
-        println("No number is passed");
+        println("Usage: factorial <n>");
     }
 }

@@ -33,6 +33,6 @@ main (int argc, array string argv[]) {
         int n = to_int(argv[0]);
         sieve(n);
     } else {
-        println("No number is passed");
+        println("Usage: sieve <n>");
     }
 }

@@ -1,0 +1,47 @@
+func int fibonacci_iterative(int n) {
+    if (n <= 1) {
+        return n;
+    }
+    int a = 0;
+    int b = 1;
+    for (int i = 2; i <= n; i++) {
+        int temp = a + b;
+        a = b;
+        b = temp;
+    }
+    return b;
+}
+
+func void print_all_fibonacci(int n) {
+    int a = 0;
+    int b = 1;
+    print("Fibonacci sequence up to ");
+    print(n);
+    println(":");
+    print("0: "); println(a);
+    if (n >= 1) {
+        print("1: "); println(b);
+    }
+    for (int i = 2; i <= n; i++) {
+        int temp = a + b;
+        a = b;
+        b = temp;
+        print(i);
+        print(": ");
+        println(b);
+    }
+}
+
+main (int argc, array string argv[]) {
+    if (argc >= 1) {
+        int n = to_int(argv[0]);
+        int result = fibonacci_iterative(n);
+        print("Fibonacci number ");
+        print(n);
+        print(": ");
+        println(result);
+        print_all_fibonacci(n);
+    } else {
+        println("Usage: fibonacci <n>");
+    }
+}
