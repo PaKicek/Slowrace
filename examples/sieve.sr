@@ -17,7 +17,7 @@ func void sieve (int n) { // up to 100000
             }
             p = p + 1;
         }
-        print("The prime numbers are ");
+        print("The prime numbers: ");
         for (int i = 2; i <= n; i++) {
             if (primes[i] == true) {
                 print(i);
