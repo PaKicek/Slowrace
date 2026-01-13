@@ -4,12 +4,20 @@ import org.pakicek.runtime.bytecode.Chunk;
 import org.pakicek.runtime.bytecode.OpCode;
 import org.pakicek.runtime.vm.SrValue;
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 public class JitCompiler {
 
     public Chunk optimize(Chunk original) {
-        return optimizePass(original);
+        // Local Optimizations (Constant Folding & Arithmetic Identities)
+        Chunk folded = optimizePass(original);
+
+        // Dead Code Elimination (Global Optimization)
+        // Removes unreachable code and recalculates jump offsets.
+        return deadCodeElimination(folded);
     }
 
     private Chunk optimizePass(Chunk original) {
@@ -116,6 +124,117 @@ public class JitCompiler {
         }
 
         return false;
+    }
+
+    private Chunk deadCodeElimination(Chunk input) {
+        List<Byte> oldCode = input.code;
+        int codeSize = oldCode.size();
+        boolean[] reachable = new boolean[codeSize];
+        int[] oldToNewAddress = new int[codeSize + 1]; // Mapping array
+        Arrays.fill(oldToNewAddress, -1);
+
+        // Reachability Analysis (BFS)
+        Queue<Integer> queue = new LinkedList<>();
+        queue.add(0); // Entry point is reachable
+        reachable[0] = true;
+
+        while (!queue.isEmpty()) {
+            int ip = queue.poll();
+            if (ip >= codeSize) continue;
+
+            int opByte = oldCode.get(ip) & 0xFF;
+            OpCode op = OpCode.values()[opByte];
+            int nextIp = ip + 1 + getOpcodeArity(op);
+
+            // Sequential flow (if not unconditional jump/return)
+            if (op != OpCode.JMP && op != OpCode.RETURN && op != OpCode.HALT) {
+                if (nextIp < codeSize && !reachable[nextIp]) {
+                    reachable[nextIp] = true;
+                    queue.add(nextIp);
+                }
+            }
+
+            // Branch flow (Jumps)
+            if (op == OpCode.JMP || op == OpCode.JMP_FALSE) {
+                // Parse current offset
+                int b1 = oldCode.get(ip + 1) & 0xFF;
+                int b2 = oldCode.get(ip + 2) & 0xFF;
+                short offset = (short) ((b1 << 8) | b2);
+
+                // Calculate target absolute address.
+                // VM logic: ip increases by 3 (instruction + 2 args), then adds offset.
+                // So: target = current_ip + 3 + offset
+                int jumpTarget = ip + 3 + offset;
+
+                if (jumpTarget >= 0 && jumpTarget < codeSize && !reachable[jumpTarget]) {
+                    reachable[jumpTarget] = true;
+                    queue.add(jumpTarget);
+                }
+            }
+        }
+
+        // Compact Code & Build Mapping
+        Chunk cleaned = new Chunk();
+        cleanConstants(input, cleaned); // Optional: cleanup unused constants
+
+        for (int i = 0; i < codeSize; ) {
+            int opByte = oldCode.get(i) & 0xFF;
+            OpCode op = OpCode.values()[opByte];
+            int len = 1 + getOpcodeArity(op);
+
+            if (reachable[i]) {
+                oldToNewAddress[i] = cleaned.code.size(); // Map old IP to new IP
+                copyInstruction(oldCode, i, input, cleaned, op);
+            }
+
+            i += len;
+        }
+        oldToNewAddress[codeSize] = cleaned.code.size(); // End marker
+
+        // Patch Jumps
+        // Now we must update JMP offsets because instructions moved
+        cleaned = new Chunk();
+        cleaned.constants.addAll(input.constants);
+
+        for (int i = 0; i < codeSize; ) {
+            int opByte = oldCode.get(i) & 0xFF;
+            OpCode op = OpCode.values()[opByte];
+            int len = 1 + getOpcodeArity(op);
+
+            if (reachable[i]) {
+                if (op == OpCode.JMP || op == OpCode.JMP_FALSE) {
+                    // Calculate OLD target
+                    int b1 = oldCode.get(i + 1) & 0xFF;
+                    int b2 = oldCode.get(i + 2) & 0xFF;
+                    short oldOffset = (short) ((b1 << 8) | b2);
+                    int oldTarget = i + 3 + oldOffset;
+
+                    // Find NEW target
+                    int newTarget = oldToNewAddress[oldTarget];
+                    int newCurrentIp = cleaned.code.size();
+
+                    // Calculate NEW offset
+                    // VM logic: new_ip will be newCurrentIp + 3. Target is newTarget.
+                    // offset = newTarget - (newCurrentIp + 3)
+                    int newOffset = newTarget - (newCurrentIp + 3);
+
+                    // Emit patched
+                    cleaned.emit(op, 0); // 0 = dummy line
+                    cleaned.emitByte((newOffset >> 8) & 0xFF, 0);
+                    cleaned.emitByte(newOffset & 0xFF, 0);
+                } else {
+                    // Regular copy
+                    copyInstruction(oldCode, i, input, cleaned, op);
+                }
+            }
+            i += len;
+        }
+
+        return cleaned;
+    }
+
+    private void cleanConstants(Chunk input, Chunk output) {
+        output.constants.addAll(input.constants);
     }
 
     private BigInteger calculate(BigInteger a, BigInteger b, OpCode op) {

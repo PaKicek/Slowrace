@@ -95,4 +95,28 @@ public class JitTest {
         assertEquals(OpCode.POP, OpCode.values()[optimized.code.get(2)]);
         assertEquals(OpCode.LOAD_CONST, OpCode.values()[optimized.code.get(3)]);
     }
+
+    @Test
+    public void testDeadCodeElimination() {
+        // Test removing code after RETURN
+        Chunk chunk = new Chunk();
+        int idx = chunk.addConstant(new SrValue(BigInteger.valueOf(5)));
+
+        chunk.emit(OpCode.RETURN, 1);
+
+        // Dead code block
+        chunk.emit(OpCode.LOAD_CONST, 1);
+        chunk.emitByte(idx, 1);
+        chunk.emit(OpCode.ADD, 1);
+
+        // End marker (should be unreachable too)
+        chunk.emit(OpCode.HALT, 1);
+
+        JitCompiler jit = new JitCompiler();
+        Chunk optimized = jit.optimize(chunk);
+
+        // Expected: Only RETURN (1 byte)
+        assertEquals(1, optimized.code.size());
+        assertEquals(OpCode.RETURN, OpCode.values()[optimized.code.get(0)]);
+    }
 }

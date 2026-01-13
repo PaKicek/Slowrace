@@ -72,7 +72,7 @@ public class IntegrationTest {
     }
 
     @Test
-    public void testBigIntFactorial() {
+    public void testFactorial() {
         String code = """
             func int factorial (int n) {
                 int result = 1;
