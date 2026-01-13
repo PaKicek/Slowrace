@@ -56,11 +56,6 @@ public class ASTStructureTest {
             assertTrue("Expression " + i + " should be " + expectedTypes[i].getSimpleName(),
                     expectedTypes[i].isInstance(assignment.getValue()));
         }
-
-        // Print using detailed printer
-        ASTPrinter detailedPrinter = new ASTPrinter();
-        System.out.println("=== Detailed AST ===");
-        System.out.println(detailedPrinter.print(program));
     }
 
     @Test
@@ -72,11 +67,6 @@ public class ASTStructureTest {
         ProgramNode program = parser.parse();
 
         assertNotNull(program);
-
-        // Print using detailed printer
-        ASTPrinter detailedPrinter = new ASTPrinter();
-        System.out.println("=== Detailed AST ===");
-        System.out.println(detailedPrinter.print(program));
     }
 
     @Test
@@ -106,11 +96,6 @@ public class ASTStructureTest {
         // Check struct type
         assertTrue(function.getParameters().get(6).getType() instanceof StructTypeNode);
         assertEquals("Point", ((StructTypeNode) function.getParameters().get(6).getType()).getStructName());
-
-        // Print using detailed printer
-        ASTPrinter detailedPrinter = new ASTPrinter();
-        System.out.println("=== Detailed AST ===");
-        System.out.println(detailedPrinter.print(program));
     }
 
     @Test
@@ -157,10 +142,5 @@ public class ASTStructureTest {
         assertEquals("x", fieldAccess.getFieldName());
         assertTrue(fieldAccess.getObject() instanceof VariableNode);
         assertEquals("p", ((VariableNode) fieldAccess.getObject()).getName());
-
-        // Detailed print
-        ASTPrinter detailedPrinter = new ASTPrinter();
-        System.out.println("=== Detailed Struct AST ===");
-        System.out.println(detailedPrinter.print(program));
     }
 }

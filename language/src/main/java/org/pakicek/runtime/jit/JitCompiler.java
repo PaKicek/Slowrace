@@ -35,7 +35,7 @@ public class JitCompiler {
 
             // --- Optimization 2: Arithmetic Identities ---
             if (tryArithmeticIdentities(code, i, original, optimized)) {
-                i += 2; // Skip 2 bytes (LOAD_CONST + arg). Op is skipped by logic.
+                i += 3; // Skip 3 bytes (LOAD_CONST + arg + 1 math op)
                 continue;
             }
 

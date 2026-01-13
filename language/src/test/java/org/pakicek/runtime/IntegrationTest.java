@@ -30,13 +30,7 @@ public class IntegrationTest {
     }
 
     private void runCode(String code) {
-        List<Token> tokens = new Lexer(code).scanTokens();
-        Parser parser = new Parser(tokens);
-        ProgramNode program = parser.parse();
-        BytecodeCompiler compiler = new BytecodeCompiler();
-        ProgramImage image = compiler.compile(program);
-        VirtualMachine vm = new VirtualMachine();
-        vm.run(image, new String[0]);
+        runCode(code, new String[0]);
     }
 
     private void runCode(String code, String[] args) {
@@ -79,7 +73,6 @@ public class IntegrationTest {
 
     @Test
     public void testBigIntFactorial() {
-        // Calculation of 21! inside main loop
         String code = """
             func int factorial (int n) {
                 int result = 1;
@@ -96,7 +89,6 @@ public class IntegrationTest {
             }
         """;
         runCode(code);
-        // 21! = 51090942171709440000
         assertEquals("51090942171709440000", outContent.toString().trim());
     }
 
@@ -115,8 +107,7 @@ public class IntegrationTest {
 
     @Test
     public void testArraysAndGC() {
-        // This test creates garbage arrays in a loop to trigger GC
-        // And validates that the final array is still intact
+        // This test creates garbage arrays in a loop to trigger GC аnd validates that the final array is still intact
         String code = """
             main (int argc, array string argv[]) {
                 array int keeper[5];
@@ -156,16 +147,75 @@ public class IntegrationTest {
 
     @Test
     public void testRecursionAndJit() {
-        // To test JIT call counter and Recursion, we need to register a function manually
-        // because BytecodeCompiler in this simplified version compiles ProgramNode by visiting MainNode only.
-        // But for Integration, we can simulate it if we updated Compiler to support functions.
-        // Assuming your Compiler supports visiting FunctionDeclarationNode and storing it:
+        // Recursive Fibonacci to test function calls, stack depth and trigger JIT
+        String code = """
+            func int fib(int n) {
+                if (n <= 1) {
+                    return n;
+                }
+                return fib(n - 1) + fib(n - 2);
+            }
+        
+            main (int argc, array string argv[]) {
+                // fib(10) = 55. This makes enough calls to trigger JIT if threshold is low.
+                int res = fib(10);
+                print(res);
+            }
+        """;
+        runCode(code);
+        assertEquals("55", outContent.toString().trim());
+    }
 
-        // Note: Since current BytecodeCompiler implementation focuses on MainNode traversal
-        // and doesn't explicitly store function chunks in a global map yet (it returns one chunk),
-        // testing full recursion requires expanding BytecodeCompiler to register functions in VM.
-        // For this test suite, we will stick to Main-body logic which is fully implemented.
-        assertTrue(true);
+    @Test
+    public void testLogicShortCircuit() {
+        // Tests that second part of && / || is NOT executed if not needed
+        String code = """
+            func bool side_effect() {
+                print("Effect");
+                return true;
+            }
+        
+            main (int argc, array string argv[]) {
+                // &&: false && ... (should NOT print)
+                bool a = false && side_effect();
+        
+                // ||: true || ... (should NOT print)
+                bool b = true || side_effect();
+        
+                print("Done");
+            }
+        """;
+        runCode(code);
+        assertEquals("Done", outContent.toString().trim());
+    }
+
+    @Test
+    public void testArraySorting() {
+        String code = """
+            func void bubble_sort(array int arr) {
+                int n = len(arr);
+                for (int i = 0; i < n - 1; i++) {
+                    for (int j = 0; j < n - i - 1; j++) {
+                        if (arr[j] > arr[j + 1]) {
+                            int temp = arr[j];
+                            arr[j] = arr[j + 1];
+                            arr[j + 1] = temp;
+                        }
+                    }
+                }
+            }
+        
+            main (int argc, array string argv[]) {
+                array int nums[5];
+                nums[0] = 5; nums[1] = 1; nums[2] = 4; nums[3] = 2; nums[4] = 8;
+                bubble_sort(nums);
+                for (int i = 0; i < 5; i++) {
+                    print(nums[i]);
+                }
+            }
+        """;
+        runCode(code);
+        assertEquals("12458", outContent.toString().trim());
     }
 
     @Test

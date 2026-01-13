@@ -10,7 +10,7 @@ public class LexerExamplesTest {
     @Test
     public void testInsertionSortExampleTokens() {
         String code = """
-                func array int insertion_sort (array int numbers) { // up to 10000 elements
+                func array int insertion_sort (array int numbers) {
                      for (int i = 1; i < len(numbers); i++) {
                          int key = numbers[i];
                          int j = i - 1;
@@ -65,6 +65,111 @@ public class LexerExamplesTest {
 
         assertTrue(containsTokenType(tokens, TokenType.INTEGER_LITERAL));
         assertTrue(containsTokenType(tokens, TokenType.STRING_LITERAL));
+    }
+
+    @Test
+    public void testQuickSortExampleTokens() {
+        String code = """
+            func int partition (array int arr, int low, int high) {
+                int pivot = arr[high];
+                int i = low - 1;
+                for (int j = low; j < high; j++) {
+                    if (arr[j] < pivot) {
+                        i++;
+                        int temp = arr[i];
+                        arr[i] = arr[j];
+                        arr[j] = temp;
+                    }
+                }
+                int temp = arr[i + 1];
+                arr[i + 1] = arr[high];
+                arr[high] = temp;
+                return i + 1;
+            }
+        
+            func void quick_sort_recursive (array int arr, int low, int high) {
+                if (low < high) {
+                    int pi = partition(arr, low, high);
+                    quick_sort_recursive(arr, low, pi - 1);
+                    quick_sort_recursive(arr, pi + 1, high);
+                }
+            }
+        
+            func array int quick_sort (array int arr) {
+                quick_sort_recursive(arr, 0, len(arr) - 1);
+                return arr;
+            }
+        
+            main (int argc, array string argv[]) {
+                if (argc >= 1) {
+                    int count = to_int(argv[0]);
+                    array int numbers[count];
+                    for (int i = 0; i < count; i++) {
+                        numbers[i] = random(0, 100);
+                    }
+                    quick_sort(numbers);
+                }
+            }
+        """;
+
+        Lexer lexer = new Lexer(code);
+        List<Token> tokens = lexer.scanTokens();
+
+        assertFalse(tokens.isEmpty());
+        assertTrue(containsTokenType(tokens, TokenType.FUNC));
+        assertTrue(containsTokenType(tokens, TokenType.INT));
+        assertTrue(containsTokenType(tokens, TokenType.IF));
+        assertTrue(containsTokenType(tokens, TokenType.FOR));
+
+        // Verify identifiers
+        assertTrue(containsTokenWithLexeme(tokens, "partition"));
+        assertTrue(containsTokenWithLexeme(tokens, "quick_sort"));
+        assertTrue(containsTokenWithLexeme(tokens, "random"));
+
+        // No errors
+        assertFalse(containsTokenType(tokens, TokenType.ERROR));
+    }
+
+    @Test
+    public void testFibonacciExampleTokens() {
+        String code = """
+            func int fib_iterative(int n) {
+                if (n <= 1) { return n; }
+                int a = 0;
+                int b = 1;
+                for (int i = 2; i <= n; i++) {
+                    int temp = a + b;
+                    a = b;
+                    b = temp;
+                }
+                return b;
+            }
+        
+            main (int argc, array string argv[]) {
+                if (argc >= 1) {
+                    int n = to_int(argv[0]);
+                    println(fib_iterative(n));
+                }
+            }
+        """;
+
+        Lexer lexer = new Lexer(code);
+        List<Token> tokens = lexer.scanTokens();
+
+        assertFalse(tokens.isEmpty());
+        assertTrue(containsTokenType(tokens, TokenType.FUNC));
+        assertTrue(containsTokenType(tokens, TokenType.IF));
+        assertTrue(containsTokenType(tokens, TokenType.FOR));
+        assertTrue(containsTokenType(tokens, TokenType.RETURN));
+
+        // Should contain 'fib_iterative' identifier
+        assertTrue(containsTokenWithLexeme(tokens, "fib_iterative"));
+
+        // Should contain '<=' operator
+        assertTrue(containsTokenType(tokens, TokenType.LESS_EQUAL));
+
+        // No errors
+        assertFalse(containsTokenType(tokens, TokenType.ERROR));
     }
 
     @Test

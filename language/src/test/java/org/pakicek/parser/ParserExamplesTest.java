@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import org.pakicek.parser.ast.node.*;
 import org.pakicek.parser.ast.node.expression.*;
 import org.pakicek.parser.ast.node.statement.*;
+import org.pakicek.parser.ast.node.type.BasicTypeNode;
 import org.pakicek.parser.lexer.Lexer;
 import org.pakicek.parser.lexer.Token;
 
@@ -15,7 +16,7 @@ public class ParserExamplesTest {
     @Test
     public void testInsertionSortExample() {
         String code = """
-                func array int insertion_sort (array int numbers) { // up to 10000 elements
+                func array int insertion_sort (array int numbers) {
                      for (int i = 1; i < len(numbers); i++) {
                          int key = numbers[i];
                          int j = i - 1;
@@ -63,6 +64,110 @@ public class ParserExamplesTest {
         MainNode main = program.getMainNode();
         assertNotNull(main.getBody());
         assertFalse(main.getBody().getStatements().isEmpty());
+    }
+
+    @Test
+    public void testQuickSortExample() {
+        String code = """
+            func int partition (array int arr, int low, int high) {
+                int pivot = arr[high];
+                int i = low - 1;
+                for (int j = low; j < high; j++) {
+                    if (arr[j] < pivot) {
+                        i++;
+                        int temp = arr[i];
+                        arr[i] = arr[j];
+                        arr[j] = temp;
+                    }
+                }
+                int temp = arr[i + 1];
+                arr[i + 1] = arr[high];
+                arr[high] = temp;
+                return i + 1;
+            }
+        
+            func void quick_sort_recursive (array int arr, int low, int high) {
+                if (low < high) {
+                    int pi = partition(arr, low, high);
+                    quick_sort_recursive(arr, low, pi - 1);
+                    quick_sort_recursive(arr, pi + 1, high);
+                }
+            }
+        
+            func array int quick_sort (array int arr) {
+                quick_sort_recursive(arr, 0, len(arr) - 1);
+                return arr;
+            }
+        
+            main (int argc, array string argv[]) {
+                // Main body simplified for parsing test
+                quick_sort(numbers);
+            }
+        """;
+
+        List<Token> tokens = new Lexer(code).scanTokens();
+        Parser parser = new Parser(tokens);
+        ProgramNode program = parser.parse();
+
+        assertNotNull(program);
+        assertEquals(3, program.getFunctions().size());
+
+        // Check function names
+        assertEquals("partition", program.getFunctions().get(0).getName());
+        assertEquals("quick_sort_recursive", program.getFunctions().get(1).getName());
+        assertEquals("quick_sort", program.getFunctions().get(2).getName());
+
+        // Check recursion call in quick_sort_recursive
+        BlockStatementNode body = program.getFunctions().get(1).getBody();
+        IfStatementNode ifStmt = (IfStatementNode) body.getStatements().get(0);
+        BlockStatementNode thenBlock = ifStmt.getThenBlock();
+        // Should have 3 statements: partition, recursive, recursive
+        assertEquals(3, thenBlock.getStatements().size());
+        assertTrue(((ExpressionStatementNode)thenBlock.getStatements().get(1)).getExpression() instanceof FunctionCallNode);
+    }
+
+    @Test
+    public void testFibonacciExample() {
+        String code = """
+            func int fib_iterative(int n) {
+                if (n <= 1) { return n; }
+                int a = 0;
+                int b = 1;
+                for (int i = 2; i <= n; i++) {
+                    int temp = a + b;
+                    a = b;
+                    b = temp;
+                }
+                return b;
+            }
+        
+            main (int argc, array string argv[]) {
+                int res = fib_iterative(10);
+            }
+        """;
+
+        List<Token> tokens = new Lexer(code).scanTokens();
+        Parser parser = new Parser(tokens);
+        ProgramNode program = parser.parse();
+
+        assertNotNull(program);
+        assertEquals(1, program.getFunctions().size());
+
+        FunctionDeclarationNode fibFunc = program.getFunctions().get(0);
+        assertEquals("fib_iterative", fibFunc.getName());
+
+        // Check return type
+        assertNotEquals("void", ((BasicTypeNode) fibFunc.getReturnType()).getTypeName());
+
+        // Check loop structure
+        boolean hasLoop = false;
+        for(StatementNode stmt : fibFunc.getBody().getStatements()) {
+            if (stmt instanceof ForLoopNode) {
+                hasLoop = true;
+                break;
+            }
+        }
+        assertTrue("Fibonacci function should have a loop", hasLoop);
     }
 
     @Test
@@ -115,7 +220,7 @@ public class ParserExamplesTest {
     @Test
     public void testSieveOfEratosthenes() {
         String code = """
-                func void sieve (int n) { // up to 100000
+                func void sieve (int n) {
                      if (n < 2) {
                          println("There are no prime numbers less than 2");
                      } else {
@@ -211,5 +316,12 @@ public class ParserExamplesTest {
         StructDeclarationNode bodyStruct = program.getStructs().get(0);
         assertEquals("Body", bodyStruct.getName());
         assertEquals(7, bodyStruct.getFields().size());
+
+        // Check field types
+        // All fields are float
+        for(VariableDeclarationNode field : bodyStruct.getFields()) {
+            assertTrue(field.getType() instanceof org.pakicek.parser.ast.node.type.BasicTypeNode);
+            assertEquals("float", ((org.pakicek.parser.ast.node.type.BasicTypeNode)field.getType()).getTypeName());
+        }
     }
 }
