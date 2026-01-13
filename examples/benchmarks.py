@@ -82,13 +82,16 @@ def find_jar():
     print("Could not find executable JAR file.")
     sys.exit(1)
 
-def run_benchmark(jar_path, source_file, args):
+def run_benchmark(jar_path, source_file, args, use_jit):
     full_path = os.path.join(EXAMPLES_DIR, source_file)
     if not os.path.exists(full_path):
         print(f"File {full_path} not found.")
         return None
 
-    cmd = ["java", "-jar", jar_path, "run", full_path] + args
+    cmd = ["java", "-jar", jar_path]
+    if not use_jit:
+        cmd.append("--no-jit")
+    cmd += ["run", full_path] + args
 
     start_time = time.time()
     try:
@@ -108,17 +111,24 @@ def main():
     print(f"Using JAR: {jar_path}\n")
 
     # 3. Run Benchmarks
-    print(f"{'Benchmark File':<25} | {'Args':<30} | {'Time (ms)':<10}")
-    print("-" * 80)
+    print(f"{'Benchmark':<25} | {'Args':<30} | {'JIT (ms)':<10} | {'No-JIT (ms)':<12} | {'Speedup':<10}")
+    print("-" * 100)
 
     for filename, args in BENCHMARKS:
-        duration = run_benchmark(jar_path, filename, args)
+        t_jit = run_benchmark(jar_path, filename, args, True)
+        t_nojit = run_benchmark(jar_path, filename, args, False)
         arg_str = " ".join(args)
-        if duration is not None:
-            print(f"{filename:<25} | {arg_str:<30} | {duration:>10.2f}")
-        else:
-            print(f"{filename:<25} | {arg_str:<30} | {'FAILED':>10}")
-    print("-" * 80)
+        s_jit = f"{t_jit:.2f}" if t_jit else "FAIL"
+        s_nojit = f"{t_nojit:.2f}" if t_nojit else "FAIL"
+
+        speedup = "N/A"
+        if t_jit and t_nojit and t_jit > 0:
+            ratio = t_nojit / t_jit
+            speedup = f"{ratio:.2f}x"
+
+            print(f"{filename:<25} | {arg_str:<30} | {s_jit:>10} | {s_nojit:>12} | {speedup:>10}")
+
+    print("-" * 100)
 
 if __name__ == "__main__":
     main()
