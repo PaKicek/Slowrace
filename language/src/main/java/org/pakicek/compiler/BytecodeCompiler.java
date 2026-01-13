@@ -6,9 +6,9 @@ import org.pakicek.parser.ast.node.expression.*;
 import org.pakicek.parser.ast.node.expression.literal.*;
 import org.pakicek.parser.ast.node.statement.*;
 import org.pakicek.parser.ast.node.type.*;
-import org.pakicek.vm.ProgramImage;
-import org.pakicek.vm.bytecode.*;
-import org.pakicek.vm.runtime.SrValue;
+import org.pakicek.runtime.ProgramImage;
+import org.pakicek.runtime.bytecode.*;
+import org.pakicek.runtime.vm.SrValue;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -280,6 +280,7 @@ public class BytecodeCompiler implements ASTVisitor<Void> {
         ExpressionNode target = node.getTarget();
 
         if (target instanceof VariableNode) {
+            // Variable assignment: var = val
             // Logic: Calculate Value -> DUP -> Store Local -> (Value remains on stack)
             node.getValue().accept(this);
             String name = ((VariableNode) target).getName();
@@ -292,27 +293,27 @@ public class BytecodeCompiler implements ASTVisitor<Void> {
 
         } else if (target instanceof FieldAccessNode fieldAccess) {
             // Struct assignment: obj.field = val
-            // We assume VM's SET_FIELD consumes object and value, but leaves value on stack or we manipulate stack
-            // Standard approach:
-            fieldAccess.getObject().accept(this); // [Obj]
-            node.getValue().accept(this);         // [Obj, Val]
+            // Stack layout: [Object, Value]
+            // OpCode SET_FIELD performs the assignment and pushes Value back onto the stack.
 
-            // We need [Val] left on stack.
-            // Use DUP_X1 or just assume VM SET_FIELD pushes Val back.
-            // Since we added DUP/ROT, but not DUP_X1 (dup top and insert below),
-            // let's rely on VM implementation of SET_FIELD to be expression-friendly (push result).
+            fieldAccess.getObject().accept(this); // Push Object
+            node.getValue().accept(this);         // Push Value
 
             SrValue nameVal = new SrValue(fieldAccess.getFieldName());
             int nameIdx = currentChunk.addConstant(nameVal);
+
             currentChunk.emit(OpCode.SET_FIELD, node.getLine());
             currentChunk.emitByte(nameIdx, node.getLine());
 
         } else if (target instanceof ArrayAccessNode arrayAccess) {
-            arrayAccess.getArray().accept(this); // [Arr]
-            arrayAccess.getIndex().accept(this); // [Arr, Idx]
-            node.getValue().accept(this);        // [Arr, Idx, Val]
+            // Array assignment: arr[idx] = val
+            // Stack layout: [Array, Index, Value]
+            // OpCode SET_ARRAY performs the assignment and pushes Value back onto the stack.
 
-            // Similar to field, assuming SET_ARRAY pushes Val back.
+            arrayAccess.getArray().accept(this); // Push Array
+            arrayAccess.getIndex().accept(this); // Push Index
+            node.getValue().accept(this);        // Push Value
+
             currentChunk.emit(OpCode.SET_ARRAY, node.getLine());
         }
         return null;

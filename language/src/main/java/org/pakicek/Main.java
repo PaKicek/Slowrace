@@ -1,13 +1,13 @@
 package org.pakicek;
 
 import org.pakicek.compiler.BytecodeCompiler;
-import org.pakicek.io.BytecodeIO;
+import org.pakicek.compiler.BytecodeIO;
 import org.pakicek.parser.Parser;
 import org.pakicek.parser.ast.node.ProgramNode;
 import org.pakicek.parser.lexer.Lexer;
 import org.pakicek.parser.lexer.Token;
-import org.pakicek.vm.ProgramImage;
-import org.pakicek.vm.VirtualMachine;
+import org.pakicek.runtime.ProgramImage;
+import org.pakicek.runtime.VirtualMachine;
 
 import java.io.IOException;
 import java.nio.file.Files;
