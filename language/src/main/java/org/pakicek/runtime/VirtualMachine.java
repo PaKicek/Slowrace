@@ -14,6 +14,7 @@ public class VirtualMachine {
     private final Heap heap = new Heap();
     private final GarbageCollector gc;
     private final JitCompiler jit = new JitCompiler();
+    private boolean jitEnabled = true;
     private final Random random = new Random();
 
     // Global registry for functions (Name -> Bytecode Chunk)
@@ -24,6 +25,10 @@ public class VirtualMachine {
 
     public VirtualMachine() {
         this.gc = new GarbageCollector(heap, this);
+    }
+
+    public void setJitEnabled(boolean enabled) {
+        this.jitEnabled = enabled;
     }
 
     public void run(ProgramImage image, String[] args) {
@@ -315,10 +320,14 @@ public class VirtualMachine {
                     }
 
                     // JIT check
-                    int calls = callCounts.getOrDefault(funcChunk, 0) + 1;
-                    callCounts.put(funcChunk, calls);
-                    if (calls > 10) {
-                        funcChunk = jit.optimize(funcChunk);
+                    if (jitEnabled) {
+                        int calls = callCounts.getOrDefault(funcChunk, 0) + 1;
+                        callCounts.put(funcChunk, calls);
+                        if (calls > 10) {
+                            funcChunk = jit.optimize(funcChunk);
+                            functions.put(funcName, funcChunk);
+                            callCounts.put(funcChunk, -1000000);
+                        }
                     }
 
                     CallFrame nextFrame = new CallFrame(funcChunk, stack.size() - argCount);
