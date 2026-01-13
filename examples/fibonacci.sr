@@ -1,4 +1,4 @@
-func int fibonacci_iterative(int n) {
+func int fibonacci_iterative (int n) {
     if (n <= 1) {
         return n;
     }
@@ -12,7 +12,7 @@ func int fibonacci_iterative(int n) {
     return b;
 }
 
-func void print_all_fibonacci(int n) {
+func void print_all_fibonacci (int n) {
     int a = 0;
     int b = 1;
     print("Fibonacci sequence up to ");

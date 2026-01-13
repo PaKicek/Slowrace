@@ -1,4 +1,4 @@
-func int factorial (int n) { // up to 20!
+func int factorial (int n) {
     int result = 1;
     for (int i = 2; i <= n; i++) {
         result = result * i;

@@ -1,4 +1,4 @@
-func int factorial (int n) { // up to 20!
+func int factorial (int n) {
     if (n <= 1) {
         return 1;
     }
