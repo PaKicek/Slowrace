@@ -59,15 +59,15 @@ cd language && mvn clean package
 После сборки вы можете использовать компилятор следующими способами:
 - **Компиляция и запуск (run)**: компилирует исходный файл в памяти и сразу запускает его.
   ```bash
-  cd language && java -jar target/slowrace-1.0-SNAPSHOT-jar-with-dependencies.jar run examples/factorial.sr 10
+  cd language && java -jar target/language-1.0-SNAPSHOT-jar-with-dependencies.jar run ../examples/factorial.sr 10
   ```
 - **Компиляция в файл (compile)**: создает файл байт-кода `.srbyte` из исходного кода.
   ```bash
-  cd language && java -jar target/slowrace-1.0-SNAPSHOT-jar-with-dependencies.jar compile examples/factorial.sr out.srbyte
+  cd language && java -jar target/language-1.0-SNAPSHOT-jar-with-dependencies.jar compile ../examples/factorial.sr out.srbyte
   ```
 - **Исполнение байт-кода (exec)**: запускает ранее скомпилированный файл.
   ```bash
-  cd language && java -jar target/slowrace-1.0-SNAPSHOT-jar-with-dependencies.jar exec out.srbyte 10
+  cd language && java -jar target/language-1.0-SNAPSHOT-jar-with-dependencies.jar exec out.srbyte 10
   ```
 
 #### Аргументы командной строки
