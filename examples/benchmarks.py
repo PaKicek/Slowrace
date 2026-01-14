@@ -55,13 +55,13 @@ BENCHMARKS = [
 def build_project():
     print("Building project with Maven...")
     # Using shell=True to find 'mvn' in path on Windows/Linux
-    cmd = "mvn clean package -DskipTests"
+    cmd = "mvn clean package"
 
     # On Windows "mvn.cmd", on Linux/Mac "mvn"
     mvn_executable = "mvn.cmd" if os.name == 'nt' else "mvn"
 
     try:
-        subprocess.check_call([mvn_executable, "clean", "package", "-DskipTests"], cwd=PROJECT_ROOT)
+        subprocess.check_call([mvn_executable, "clean", "package"], cwd=PROJECT_ROOT)
         print("Build successful.\n")
     except subprocess.CalledProcessError:
         print("Build failed. Please check Maven output.")
