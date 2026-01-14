@@ -35,6 +35,16 @@ BENCHMARKS = [
     ("sieve.sr", ["1000000"]),
     ("sieve.sr", ["10000000"]),
     ("nbody.sr", []),
+    ("jit_const_folding.sr", ["500000"]),
+    ("jit_const_folding.sr", ["600000"]),
+    ("jit_const_folding.sr", ["700000"]),
+    ("jit_const_folding.sr", ["800000"]),
+    ("jit_const_folding.sr", ["900000"]),
+    ("jit_combined_test.sr", ["500000"]),
+    ("jit_combined_test.sr", ["600000"]),
+    ("jit_combined_test.sr", ["700000"]),
+    ("jit_combined_test.sr", ["800000"]),
+    ("jit_combined_test.sr", ["900000"])
 ]
 
 def build_project():
