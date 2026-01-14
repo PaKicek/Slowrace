@@ -3,7 +3,7 @@ func int compute(int x) {
     int c2 = 50 * 4;
     int c3 = c1 + c2;
     int c4 = (30 - 10) * (7 + 3);
-    int const_part = c3 + c4;   // → 700
+    int const_part = c3 + c4;   // -> 700
 
     int a1 = x + 0;
     int a2 = a1 * 1;
