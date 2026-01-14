@@ -40,11 +40,16 @@ BENCHMARKS = [
     ("jit_arithmetic_identities.sr", ["70000"]),
     ("jit_arithmetic_identities.sr", ["80000"]),
     ("jit_arithmetic_identities.sr", ["90000"]),
-    ("jit_dead_code_elimination.sr", ["500"]),
-    ("jit_dead_code_elimination.sr", ["600"]),
-    ("jit_dead_code_elimination.sr", ["700"]),
-    ("jit_dead_code_elimination.sr", ["800"]),
-    ("jit_dead_code_elimination.sr", ["900"])
+    ("jit_const_folding.sr", ["500000"]),
+    ("jit_const_folding.sr", ["600000"]),
+    ("jit_const_folding.sr", ["700000"]),
+    ("jit_const_folding.sr", ["800000"]),
+    ("jit_const_folding.sr", ["900000"]),
+    ("jit_combined_test.sr", ["500000"]),
+    ("jit_combined_test.sr", ["600000"]),
+    ("jit_combined_test.sr", ["700000"]),
+    ("jit_combined_test.sr", ["800000"]),
+    ("jit_combined_test.sr", ["900000"])
 ]
 
 def build_project():
