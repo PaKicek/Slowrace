@@ -1,0 +1,53 @@
+func int applyIdentities(int x) {
+    int a = x + 0;
+    int b = a - 0;
+    int c = b * 1;
+    int d = c - 0;
+    int e = d * 0;
+    int f = e + x;
+    int g = x + 0;
+    int h = e + 0;
+    int i = a - 0;
+    int j = b * 1;
+    int k = j - 0;
+    int l = d * 0;
+    int m = l + x;
+    int n = x + 0;
+    int o = n + 0;
+    int p = o - 0;
+    int q = j * 1;
+    int w = q - 0;
+    int y = w * 0;
+    int z = 0 + b;
+    int aa = x + 0;
+    int ba = a - 0;
+    int ca = b * 1;
+    int da = c - 0;
+    int ea = d * 0;
+    int fa = e + x;
+    int ga = x + 0;
+    int ha = e + 0;
+    int ia = a - 0;
+    int ja = b * 1;
+    int ka = j - 0;
+    int la = d * 0;
+    int am = l + x;
+    int na = x + 0;
+    int oa = n + 0;
+    int pa = o - 0;
+    int qa = j * 1;
+    int wa = q - 0;
+    int ya = w * 0;
+    int za = 0 + b;
+    return za;
+}
+
+main (int argc, array string argv[]) {
+    int total = 0;
+    int n = to_int(argv[0]);
+    for (int i = 0; i < n; i = i + 1) {
+        int arg = i % 1000;
+        total = total + applyIdentities(arg);
+    }
+    print(total);
+}
