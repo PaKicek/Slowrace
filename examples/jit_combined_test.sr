@@ -1,0 +1,31 @@
+func int compute(int x) {
+    int c1 = 100 + 200;
+    int c2 = 50 * 4;
+    int c3 = c1 + c2;
+    int c4 = (30 - 10) * (7 + 3);
+    int const_part = c3 + c4;   // → 700
+
+    int a1 = x + 0;
+    int a2 = a1 * 1;
+    int a3 = a2 - 0;
+    int identity_part = a3;
+
+    int dynamic_part = x * x + 3 * x;
+
+    return const_part + identity_part + dynamic_part;
+
+    int dead1 = 9999;
+    int dead2 = dead1 + 10000;
+    int dead3 = dead2 * 2 - 5000;
+    int dead4 = (123 + 456) * (789 - 100);
+    int dead_sum = dead1 + dead2 + dead3 + dead4;
+}
+
+main (int argc, array string argv[]) {
+    int total = 0;
+    int n = to_int(argv[0]);
+    for (int i = 0; i < n; i = i + 1) {
+        total = total + compute(i % 1000);
+    }
+    print(total);
+}

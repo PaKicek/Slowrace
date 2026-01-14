@@ -1,0 +1,16 @@
+func int computeConstants() {
+    int a = (10 + 20) * (30 - 5);
+    int b = (100 / 4) + (7 * 8);
+    int c = a + b - (2 * 3 * 4);
+    int d = c * 2 + 1;
+    return d;
+}
+
+main (int argc, array string argv[]) {
+    int total = 0;
+    int n = to_int(argv[0]);
+    for (int i = 0; i < n; i = i + 1) {
+        total = total + computeConstants();
+    }
+    print(total);
+}
