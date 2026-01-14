@@ -35,6 +35,16 @@ BENCHMARKS = [
     ("sieve.sr", ["1000000"]),
     ("sieve.sr", ["10000000"]),
     ("nbody.sr", []),
+    ("jit_arithmetic_identities.sr", ["50000"]),
+    ("jit_arithmetic_identities.sr", ["60000"]),
+    ("jit_arithmetic_identities.sr", ["70000"]),
+    ("jit_arithmetic_identities.sr", ["80000"]),
+    ("jit_arithmetic_identities.sr", ["90000"]),
+    ("jit_dead_code_elimination.sr", ["500"]),
+    ("jit_dead_code_elimination.sr", ["600"]),
+    ("jit_dead_code_elimination.sr", ["700"]),
+    ("jit_dead_code_elimination.sr", ["800"]),
+    ("jit_dead_code_elimination.sr", ["900"])
 ]
 
 def build_project():
