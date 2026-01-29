@@ -19,12 +19,10 @@ import java.util.Map;
 public class BytecodeCompiler implements ASTVisitor<Void> {
     private Chunk currentChunk;
     private final Map<String, Chunk> functions = new HashMap<>();
-
-    // Symbol table for local variables
+    
     private static class Local {
         String name;
-        int depth; // Scope depth
-
+        int depth;
         Local(String name, int depth) {
             this.name = name;
             this.depth = depth;
@@ -33,85 +31,56 @@ public class BytecodeCompiler implements ASTVisitor<Void> {
 
     private final List<Local> locals = new ArrayList<>();
     private int scopeDepth = 0;
-
-    /**
-     * Compiles the program.
-     * Returns the Chunk for the Main entry point.
-     * Compiled functions are stored internally and should be retrieved via getFunctions().
-     */
+    
     public ProgramImage compile(ProgramNode program) {
         functions.clear();
-
-        // 1. Compile functions
         visit(program);
-
-        // 2. Compile Main
         currentChunk = new Chunk();
         locals.clear();
         scopeDepth = 0;
-
         if (program.getMainNode() != null) {
             program.getMainNode().accept(this);
         }
-
         currentChunk.emit(OpCode.HALT, 0);
-
-        // Return packaged image
         return new ProgramImage(currentChunk, new HashMap<>(functions));
     }
 
     public Map<String, Chunk> getFunctions() {
         return functions;
     }
-
-    // --- Declarations & Structure ---
-
+    
     @Override
     public Void visit(ProgramNode node) {
-        // Compile all function declarations
         for (FunctionDeclarationNode func : node.getFunctions()) {
             func.accept(this);
         }
-        // Structs are metadata-only in this implementation, instantiation logic is handled in NEW_STRUCT via OpCode.
         return null;
     }
 
     @Override
     public Void visit(FunctionDeclarationNode node) {
-        // Save previous context (though currently we don't support nested functions, good practice)
         Chunk previousChunk = currentChunk;
         List<Local> previousLocals = new ArrayList<>(locals);
         int previousScope = scopeDepth;
-
-        // Init new context for function
+        
         currentChunk = new Chunk();
         locals.clear();
         scopeDepth = 0;
-
-        // Register parameters as local variables (indices 0, 1, 2...)
         scopeDepth++;
+        
         for (ParameterNode param : node.getParameters()) {
             addLocal(param.getName());
         }
-
-        // Compile body
+        
         node.getBody().accept(this);
-
-        // Emit implicit return if not present (handles void functions ending without return)
-        if (currentChunk.code.isEmpty() ||
-                currentChunk.code.get(currentChunk.code.size() - 1) != (byte)OpCode.RETURN.ordinal()) {
-
-            // Push VOID constant for implicit return
+        if (currentChunk.code.isEmpty() || currentChunk.code.get(currentChunk.code.size() - 1) != (byte)OpCode.RETURN.ordinal()) {
             int idx = currentChunk.addConstant(SrValue.VOID);
             currentChunk.emit(OpCode.LOAD_CONST, node.getLine());
             currentChunk.emitByte(idx, node.getLine());
             currentChunk.emit(OpCode.RETURN, node.getLine());
         }
-
-        // Save compiled function
+        
         functions.put(node.getName(), currentChunk);
-
-        // Restore context
         currentChunk = previousChunk;
         locals.clear();
         locals.addAll(previousLocals);
@@ -123,31 +92,23 @@ public class BytecodeCompiler implements ASTVisitor<Void> {
     @Override
     public Void visit(MainNode node) {
         scopeDepth++;
-        // Register arguments 'argc' and 'argv' as locals 0 and 1
         addLocal("argc");
         addLocal("argv");
-
         node.getBody().accept(this);
-
         scopeDepth--;
         return null;
     }
 
     @Override
     public Void visit(StructDeclarationNode node) {
-        // Structs are handled dynamically at runtime.
-        // No bytecode needed for declaration itself.
         return null;
     }
 
     @Override
     public Void visit(ParameterNode node) {
-        // Parameters are processed inside FunctionDeclarationNode to add them to locals.
         return null;
     }
-
-    // --- Statements ---
-
+    
     @Override
     public Void visit(BlockStatementNode node) {
         scopeDepth++;
@@ -161,28 +122,20 @@ public class BytecodeCompiler implements ASTVisitor<Void> {
     @Override
     public Void visit(ExpressionStatementNode node) {
         node.getExpression().accept(this);
-        // Expression statements (like 'a = 5;' or 'func()') push a result to stack.
-        // Since this result is unused, we must POP it to keep the stack clean.
         currentChunk.emit(OpCode.POP, node.getLine());
         return null;
     }
 
     @Override
     public Void visit(VariableDeclarationNode node) {
-        // 1. Compile initialization
         if (node.getInitialValue() != null) {
             node.getInitialValue().accept(this);
         } else {
             emitDefaultValue(node.getType(), node.getLine());
         }
-
-        // 2. Add to locals
         addLocal(node.getName());
-
-        // 3. Store top of stack into new local slot
         currentChunk.emit(OpCode.STORE_LOCAL, node.getLine());
         currentChunk.emitByte(locals.size() - 1, node.getLine());
-
         return null;
     }
 
@@ -191,7 +144,6 @@ public class BytecodeCompiler implements ASTVisitor<Void> {
         if (node.getValue() != null) {
             node.getValue().accept(this);
         } else {
-            // Explicit return without value -> return VOID
             int idx = currentChunk.addConstant(SrValue.VOID);
             currentChunk.emit(OpCode.LOAD_CONST, node.getLine());
             currentChunk.emitByte(idx, node.getLine());
@@ -199,16 +151,12 @@ public class BytecodeCompiler implements ASTVisitor<Void> {
         currentChunk.emit(OpCode.RETURN, node.getLine());
         return null;
     }
-
-    // --- Control Flow (If, For, While) ---
-
+    
     @Override
     public Void visit(IfStatementNode node) {
         node.getCondition().accept(this);
         int thenJump = emitJump(OpCode.JMP_FALSE, node.getLine());
-
         node.getThenBlock().accept(this);
-
         int elseJump = emitJump(OpCode.JMP, node.getLine());
         patchJump(thenJump);
 
@@ -216,10 +164,6 @@ public class BytecodeCompiler implements ASTVisitor<Void> {
             branch.getCondition().accept(this);
             int elifJump = emitJump(OpCode.JMP_FALSE, node.getLine());
             branch.getBlock().accept(this);
-            // In a full implementation, we should jump to end after block.
-            // Simplified here (fallthrough logic might execute multiple else-ifs if jumps not patched correctly).
-            // Correct logic: emitJump(JMP) to end, save it, patch all later.
-            // For now: basic elif support.
             patchJump(elifJump);
         }
 
@@ -236,9 +180,7 @@ public class BytecodeCompiler implements ASTVisitor<Void> {
         int loopStart = currentChunk.code.size();
         node.getCondition().accept(this);
         int exitJump = emitJump(OpCode.JMP_FALSE, node.getLine());
-
         node.getBody().accept(this);
-
         emitLoop(loopStart, node.getLine());
         patchJump(exitJump);
         return null;
@@ -250,70 +192,48 @@ public class BytecodeCompiler implements ASTVisitor<Void> {
         if (node.getInitialization() != null) {
             node.getInitialization().accept(this);
         }
-
+        
         int loopStart = currentChunk.code.size();
         int exitJump = -1;
-
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
             exitJump = emitJump(OpCode.JMP_FALSE, node.getLine());
         }
-
+        
         node.getBody().accept(this);
-
         if (node.getUpdate() != null) {
             node.getUpdate().accept(this);
-            currentChunk.emit(OpCode.POP, node.getLine()); // Cleanup update expression result
+            currentChunk.emit(OpCode.POP, node.getLine());
         }
-
+        
         emitLoop(loopStart, node.getLine());
-
         if (exitJump != -1) patchJump(exitJump);
         scopeDepth--;
         return null;
     }
-
-    // --- Expressions (Assignment, Binary, Unary, Calls) ---
-
+    
     @Override
     public Void visit(AssignmentNode node) {
         ExpressionNode target = node.getTarget();
-
         if (target instanceof VariableNode) {
-            // Variable assignment: var = val
-            // Logic: Calculate Value -> DUP -> Store Local -> (Value remains on stack)
             node.getValue().accept(this);
             String name = ((VariableNode) target).getName();
             int index = resolveLocal(name);
             if (index == -1) throw new RuntimeException("Undefined variable: " + name);
-
-            currentChunk.emit(OpCode.DUP, node.getLine()); // Keep value for expression result
+            currentChunk.emit(OpCode.DUP, node.getLine());
             currentChunk.emit(OpCode.STORE_LOCAL, node.getLine());
             currentChunk.emitByte(index, node.getLine());
-
         } else if (target instanceof FieldAccessNode fieldAccess) {
-            // Struct assignment: obj.field = val
-            // Stack layout: [Object, Value]
-            // OpCode SET_FIELD performs the assignment and pushes Value back onto the stack.
-
-            fieldAccess.getObject().accept(this); // Push Object
-            node.getValue().accept(this);         // Push Value
-
+            fieldAccess.getObject().accept(this);
+            node.getValue().accept(this);
             SrValue nameVal = new SrValue(fieldAccess.getFieldName());
             int nameIdx = currentChunk.addConstant(nameVal);
-
             currentChunk.emit(OpCode.SET_FIELD, node.getLine());
             currentChunk.emitByte(nameIdx, node.getLine());
-
         } else if (target instanceof ArrayAccessNode arrayAccess) {
-            // Array assignment: arr[idx] = val
-            // Stack layout: [Array, Index, Value]
-            // OpCode SET_ARRAY performs the assignment and pushes Value back onto the stack.
-
-            arrayAccess.getArray().accept(this); // Push Array
-            arrayAccess.getIndex().accept(this); // Push Index
-            node.getValue().accept(this);        // Push Value
-
+            arrayAccess.getArray().accept(this);
+            arrayAccess.getIndex().accept(this);
+            node.getValue().accept(this);
             currentChunk.emit(OpCode.SET_ARRAY, node.getLine());
         }
         return null;
@@ -322,32 +242,23 @@ public class BytecodeCompiler implements ASTVisitor<Void> {
     @Override
     public Void visit(BinaryExpressionNode node) {
         if (node.getOperator().equals("&&")) {
-            // Short-circuit AND: a && b
-            node.getLeft().accept(this); // [a]
-            currentChunk.emit(OpCode.DUP, node.getLine()); // [a, a]
-            int endJump = emitJump(OpCode.JMP_FALSE, node.getLine()); // if a is false, jump to end (consumes one a)
-
-            currentChunk.emit(OpCode.POP, node.getLine()); // a was true, pop it
-            node.getRight().accept(this); // [b]
-
+            node.getLeft().accept(this);
+            currentChunk.emit(OpCode.DUP, node.getLine());
+            int endJump = emitJump(OpCode.JMP_FALSE, node.getLine());
+            currentChunk.emit(OpCode.POP, node.getLine());
+            node.getRight().accept(this);
             patchJump(endJump);
             return null;
         }
 
         if (node.getOperator().equals("||")) {
-            // Short-circuit OR: a || b
-            // We don't have JMP_TRUE, so we jump if FALSE to eval B.
-            node.getLeft().accept(this); // [a]
-            currentChunk.emit(OpCode.DUP, node.getLine()); // [a, a]
-            int evalBJump = emitJump(OpCode.JMP_FALSE, node.getLine()); // if a is false, jump to eval B
-
-            // If here, A is true. Jump to end.
+            node.getLeft().accept(this);
+            currentChunk.emit(OpCode.DUP, node.getLine());
+            int evalBJump = emitJump(OpCode.JMP_FALSE, node.getLine());
             int endJump = emitJump(OpCode.JMP, node.getLine());
-
-            patchJump(evalBJump); // Eval B
-            currentChunk.emit(OpCode.POP, node.getLine()); // Pop 'a' (which is false)
-            node.getRight().accept(this); // [b]
-
+            patchJump(evalBJump);
+            currentChunk.emit(OpCode.POP, node.getLine());
+            node.getRight().accept(this);
             patchJump(endJump);
             return null;
         }
@@ -375,28 +286,17 @@ public class BytecodeCompiler implements ASTVisitor<Void> {
 
     @Override
     public Void visit(UnaryExpressionNode node) {
-        // Handle ++ and -- as Prefix operators
         if (node.getOperator().equals("++") || node.getOperator().equals("--")) {
             if (node.getOperand() instanceof VariableNode varNode) {
                 int idx = resolveLocal(varNode.getName());
                 if (idx == -1) throw new RuntimeException("Undefined var");
-
-                // 1. Load Var
                 currentChunk.emit(OpCode.LOAD_LOCAL, node.getLine());
                 currentChunk.emitByte(idx, node.getLine());
-
-                // 2. Load 1
                 int oneIdx = currentChunk.addConstant(new SrValue(BigInteger.ONE));
                 currentChunk.emit(OpCode.LOAD_CONST, node.getLine());
                 currentChunk.emitByte(oneIdx, node.getLine());
-
-                // 3. Add/Sub
                 currentChunk.emit(node.getOperator().equals("++") ? OpCode.ADD : OpCode.SUB, node.getLine());
-
-                // 4. Dup (result of expression)
                 currentChunk.emit(OpCode.DUP, node.getLine());
-
-                // 5. Store back
                 currentChunk.emit(OpCode.STORE_LOCAL, node.getLine());
                 currentChunk.emitByte(idx, node.getLine());
                 return null;
@@ -468,8 +368,8 @@ public class BytecodeCompiler implements ASTVisitor<Void> {
                 if (node.getArguments().size() != 2) {
                     throw new RuntimeException("random() expects 2 arguments: min and max");
                 }
-                node.getArguments().get(0).accept(this); // Pushes min
-                node.getArguments().get(1).accept(this); // Pushes max
+                node.getArguments().get(0).accept(this);
+                node.getArguments().get(1).accept(this);
                 currentChunk.emit(OpCode.RANDOM, node.getLine());
                 return null;
             }
@@ -506,9 +406,7 @@ public class BytecodeCompiler implements ASTVisitor<Void> {
         currentChunk.emitByte(idx, node.getLine());
         return null;
     }
-
-    // --- Literals ---
-
+    
     @Override
     public Void visit(IntegerLiteralNode node) {
         int idx = currentChunk.addConstant(new SrValue(BigInteger.valueOf(node.getValue())));
@@ -543,53 +441,28 @@ public class BytecodeCompiler implements ASTVisitor<Void> {
     public Void visit(ArrayLiteralNode node) {
         List<ExpressionNode> elements = node.getElements();
         int size = elements.size();
-
-        // 1. Push size
         int sizeIdx = currentChunk.addConstant(new SrValue(BigInteger.valueOf(size)));
         currentChunk.emit(OpCode.LOAD_CONST, node.getLine());
         currentChunk.emitByte(sizeIdx, node.getLine());
-
-        // 2. Create Array. Stack: [ArrayRef]
         currentChunk.emit(OpCode.NEW_ARRAY, node.getLine());
-
-        // 3. Initialize elements
+        
         for (int i = 0; i < size; i++) {
-            // Stack transformation goal: [ArrayRef, ArrayRef, Index, Value] -> SET_ARRAY
-
-            // a. Duplicate Array Reference (to keep one for the result and next iterations)
-            // Stack: [ArrayRef, ArrayRef]
             currentChunk.emit(OpCode.DUP, node.getLine());
-
-            // b. Push Index
-            // Stack: [ArrayRef, ArrayRef, i]
             int idxConst = currentChunk.addConstant(new SrValue(BigInteger.valueOf(i)));
             currentChunk.emit(OpCode.LOAD_CONST, node.getLine());
             currentChunk.emitByte(idxConst, node.getLine());
-
-            // c. Evaluate Expression (Value)
-            // Stack: [ArrayRef, ArrayRef, i, Val]
             elements.get(i).accept(this);
-
-            // d. Set Array
-            // Stack: [ArrayRef, Val] (Because VM pushes Val back after set)
             currentChunk.emit(OpCode.SET_ARRAY, node.getLine());
-
-            // e. Pop the value returned by SET_ARRAY, leaving just the original ArrayRef
-            // Stack: [ArrayRef]
             currentChunk.emit(OpCode.POP, node.getLine());
         }
-
-        // Result on stack: [ArrayRef]
+        
         return null;
     }
-
-    // --- Types (Empty implementations as they don't generate code directly) ---
+    
     @Override public Void visit(BasicTypeNode node) { return null; }
     @Override public Void visit(ArrayTypeNode node) { return null; }
     @Override public Void visit(StructTypeNode node) { return null; }
-
-    // --- Helpers ---
-
+    
     private void addLocal(String name) {
         locals.add(new Local(name, scopeDepth));
     }

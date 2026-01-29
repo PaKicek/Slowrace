@@ -15,7 +15,6 @@ public class Token {
         this.position = position;
     }
 
-    // Getters
     public TokenType getType() { return type; }
     public String getLexeme() { return lexeme; }
     public Object getLiteral() { return literal; }
@@ -24,7 +23,6 @@ public class Token {
 
     @Override
     public String toString() {
-        return String.format("Token{type=%s, lexeme='%s', literal=%s, line=%d, position=%d}",
-                type, lexeme, literal, line, position);
+        return String.format("Token{type=%s, lexeme='%s', literal=%s, line=%d, position=%d}", type, lexeme, literal, line, position);
     }
 }

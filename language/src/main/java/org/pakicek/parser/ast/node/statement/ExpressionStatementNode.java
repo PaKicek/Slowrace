@@ -3,7 +3,6 @@ package org.pakicek.parser.ast.node.statement;
 import org.pakicek.parser.ast.ASTVisitor;
 import org.pakicek.parser.ast.node.expression.ExpressionNode;
 
-// Represents expression as statement: expression;
 public class ExpressionStatementNode extends StatementNode {
     private final ExpressionNode expression;
 

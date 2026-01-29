@@ -5,7 +5,6 @@ import org.pakicek.parser.ast.ASTVisitor;
 import java.util.ArrayList;
 import java.util.List;
 
-// Represents a block of statements: { statement1; statement2; ... }
 public class BlockStatementNode extends StatementNode {
     private final List<StatementNode> statements;
 

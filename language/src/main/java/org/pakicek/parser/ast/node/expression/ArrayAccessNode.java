@@ -2,7 +2,6 @@ package org.pakicek.parser.ast.node.expression;
 
 import org.pakicek.parser.ast.ASTVisitor;
 
-// Represents array access: array[index]
 public class ArrayAccessNode extends ExpressionNode {
     private final ExpressionNode array;
     private final ExpressionNode index;

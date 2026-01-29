@@ -20,24 +20,16 @@ public class GarbageCollector {
     }
 
     private void mark() {
-        // Roots: Operand stack and Local variables in all frames
         Stack<SrObject> workList = new Stack<>();
-
-        // Collect roots from VM
         for (SrValue val : vm.getStackRoots()) {
             if (val.type == SrValue.Type.OBJECT && val.asObject() != null) {
                 workList.push(val.asObject());
             }
         }
-
-        // Traverse graph
         while (!workList.isEmpty()) {
             SrObject obj = workList.pop();
             if (obj.isMarked) continue;
-
             obj.isMarked = true;
-
-            // Add child objects to workList
             if (obj instanceof SrArray) {
                 for (SrValue el : ((SrArray) obj).elements) {
                     if (el.type == SrValue.Type.OBJECT) workList.push(el.asObject());

@@ -23,7 +23,7 @@ public class JitTest {
         chunk.emit(OpCode.ADD, 1);
         chunk.emit(OpCode.HALT, 1);
 
-        JitCompiler jit = new JitCompiler();
+        JitOptimizer jit = new JitOptimizer();
         Chunk optimized = jit.optimize(chunk);
 
         // Expected: LOAD_CONST 15, HALT (3 bytes: 1+1 + 1)
@@ -46,7 +46,7 @@ public class JitTest {
         chunk.emit(OpCode.ADD, 1);
         chunk.emit(OpCode.HALT, 1);
 
-        JitCompiler jit = new JitCompiler();
+        JitOptimizer jit = new JitOptimizer();
         Chunk optimized = jit.optimize(chunk);
 
         // Expected: LOAD_LOCAL 0, HALT (skip LOAD 0 and ADD)
@@ -67,7 +67,7 @@ public class JitTest {
         chunk.emit(OpCode.MUL, 1);
         chunk.emit(OpCode.HALT, 1);
 
-        JitCompiler jit = new JitCompiler();
+        JitOptimizer jit = new JitOptimizer();
         Chunk optimized = jit.optimize(chunk);
 
         assertEquals(3, optimized.code.size());
@@ -87,7 +87,7 @@ public class JitTest {
         chunk.emit(OpCode.MUL, 1);
         chunk.emit(OpCode.HALT, 1);
 
-        JitCompiler jit = new JitCompiler();
+        JitOptimizer jit = new JitOptimizer();
         Chunk optimized = jit.optimize(chunk);
 
         // LOAD_LOCAL (2) + POP (1) + LOAD_CONST (2) + HALT (1) = 6 bytes
@@ -112,7 +112,7 @@ public class JitTest {
         // End marker (should be unreachable too)
         chunk.emit(OpCode.HALT, 1);
 
-        JitCompiler jit = new JitCompiler();
+        JitOptimizer jit = new JitOptimizer();
         Chunk optimized = jit.optimize(chunk);
 
         // Expected: Only RETURN (1 byte)

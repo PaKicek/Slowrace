@@ -3,12 +3,10 @@ import subprocess
 import time
 import sys
 
-# --- Configuration ---
-PROJECT_ROOT = "../language"  # Folder containing pom.xml
+PROJECT_ROOT = "../language"
 EXAMPLES_DIR = "."
-JAR_NAME_PATTERN = "language-1.0-SNAPSHOT.jar" # Maven default name usually
+JAR_NAME_PATTERN = "language-1.0-SNAPSHOT.jar"
 
-# List of benchmarks: (filename, [arguments])
 BENCHMARKS = [
     ("factorial.sr", ["10"]),
     ("factorial.sr", ["20"]),
@@ -54,12 +52,8 @@ BENCHMARKS = [
 
 def build_project():
     print("Building project with Maven...")
-    # Using shell=True to find 'mvn' in path on Windows/Linux
     cmd = "mvn clean package"
-
-    # On Windows "mvn.cmd", on Linux/Mac "mvn"
     mvn_executable = "mvn.cmd" if os.name == 'nt' else "mvn"
-
     try:
         subprocess.check_call([mvn_executable, "clean", "package"], cwd=PROJECT_ROOT)
         print("Build successful.\n")
@@ -78,18 +72,11 @@ def find_jar():
 
     for file in os.listdir(target_dir):
         if file.endswith(".jar") and "original" not in file and "shaded" not in file:
-            # We are looking for the jar with dependencies if created by shade/assembly plugin
-            # Or the standard jar if dependencies are on classpath.
-            # Assuming your pom generates a standard jar or you configured a fat jar.
-            # Let's pick the one matching the name or containing 'dependencies' if you used assembly plugin
             if "dependencies" in file:
                 return os.path.join(target_dir, file)
-            # Fallback to standard jar
             if file == JAR_NAME_PATTERN:
                 return os.path.join(target_dir, file)
 
-    # If using maven-assembly-plugin as discussed before, name is usually ...-jar-with-dependencies.jar
-    # Try finding any jar that looks executable
     for file in os.listdir(target_dir):
         if file.endswith(".jar") and "original" not in file:
              return os.path.join(target_dir, file)
@@ -102,45 +89,37 @@ def run_benchmark(jar_path, source_file, args, use_jit):
     if not os.path.exists(full_path):
         print(f"File {full_path} not found.")
         return None
-
     cmd = ["java", "-jar", jar_path]
     if not use_jit:
         cmd.append("--no-jit")
     cmd += ["run", full_path] + args
-
     start_time = time.time()
     try:
         subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         end_time = time.time()
-        return (end_time - start_time) * 1000 # ms
+        return (end_time - start_time) * 1000
     except subprocess.CalledProcessError as e:
         print(f"Error running {source_file}: {e.stderr.decode('utf-8')}")
         return None
 
 def main():
-    # 1. Build
     build_project()
 
-    # 2. Find Jar
     jar_path = find_jar()
     print(f"Using JAR: {jar_path}\n")
 
-    # 3. Run Benchmarks
     print(f"{'Benchmark':<25} | {'Args':<30} | {'JIT (ms)':<10} | {'No-JIT (ms)':<12} | {'Speedup':<10}")
     print("-" * 100)
-
     for filename, args in BENCHMARKS:
         t_jit = run_benchmark(jar_path, filename, args, True)
         t_nojit = run_benchmark(jar_path, filename, args, False)
         arg_str = " ".join(args)
         s_jit = f"{t_jit:.2f}" if t_jit else "FAIL"
         s_nojit = f"{t_nojit:.2f}" if t_nojit else "FAIL"
-
         speedup = "N/A"
         if t_jit and t_nojit and t_jit > 0:
             ratio = t_nojit / t_jit
             speedup = f"{ratio:.2f}x"
-
             print(f"{filename:<25} | {arg_str:<30} | {s_jit:>10} | {s_nojit:>12} | {speedup:>10}")
 
     print("-" * 100)

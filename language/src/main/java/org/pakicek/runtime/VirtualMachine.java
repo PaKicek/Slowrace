@@ -2,7 +2,7 @@ package org.pakicek.runtime;
 
 import org.pakicek.runtime.bytecode.*;
 import org.pakicek.runtime.gc.*;
-import org.pakicek.runtime.jit.JitCompiler;
+import org.pakicek.runtime.jit.JitOptimizer;
 import org.pakicek.runtime.vm.*;
 
 import java.math.BigInteger;
@@ -13,20 +13,14 @@ public class VirtualMachine {
     private final Stack<CallFrame> frames = new Stack<>();
     private final Heap heap = new Heap();
     private final GarbageCollector gc;
-    private final JitCompiler jit = new JitCompiler();
+    private final JitOptimizer jit = new JitOptimizer();
     private boolean jitEnabled = true;
     private final Random random = new Random();
-
-    // Global registry for functions (Name -> Bytecode Chunk)
     private final Map<String, Chunk> functions = new HashMap<>();
-
-    // Call counter for JIT (hot spots detection)
     private final Map<Chunk, Integer> callCounts = new HashMap<>();
-
     public VirtualMachine() {
         this.gc = new GarbageCollector(heap, this);
     }
-
     public void setJitEnabled(boolean enabled) {
         this.jitEnabled = enabled;
     }
@@ -34,54 +28,38 @@ public class VirtualMachine {
     public void run(ProgramImage image, String[] args) {
         this.functions.clear();
         this.functions.putAll(image.functions);
-
-        // Clear state
         frames.clear();
         stack.clear();
 
-        // Preparing args for Main
-        // 1. argc (int)
         int argc = args != null ? args.length : 0;
         SrValue argcVal = new SrValue(BigInteger.valueOf(argc));
-
-        // 2. argv (array string)
         SrArray argvObj = new SrArray(argc);
         if (args != null) {
             for (int i = 0; i < argc; i++) {
                 argvObj.elements[i] = new SrValue(args[i]);
             }
         }
-        // Register array in heap for GC
+
         heap.register(argvObj);
         SrValue argvVal = new SrValue(argvObj);
-
-        // Create main frame
         CallFrame mainFrame = new CallFrame(image.mainChunk, 0);
-
-        // Initialize local variables (0=argc, 1=argv)
         mainFrame.locals[0] = argcVal;
         mainFrame.locals[1] = argvVal;
-
         frames.push(mainFrame);
-
-        // Starting execution loop
         loop();
     }
 
     private void loop() {
         while (!frames.isEmpty()) {
             CallFrame frame = frames.peek();
-
             if (frame.ip >= frame.chunk.code.size()) {
                 frames.pop();
                 continue;
             }
-
             byte opByte = frame.chunk.code.get(frame.ip++);
             OpCode op = OpCode.values()[opByte];
 
             switch (op) {
-                // --- Stack Operations ---
                 case LOAD_CONST -> {
                     int idx = frame.chunk.code.get(frame.ip++);
                     stack.push(frame.chunk.constants.get(idx));
@@ -98,8 +76,6 @@ public class VirtualMachine {
                     stack.push(b);
                     stack.push(a);
                 }
-
-                // --- Variables ---
                 case LOAD_LOCAL -> {
                     int slot = frame.chunk.code.get(frame.ip++);
                     stack.push(frame.locals[slot]);
@@ -108,8 +84,6 @@ public class VirtualMachine {
                     int slot = frame.chunk.code.get(frame.ip++);
                     frame.locals[slot] = stack.pop();
                 }
-
-                // --- Arithmetic ---
                 case ADD -> binaryOp(BigInteger::add, Double::sum);
                 case SUB -> binaryOp(BigInteger::subtract, (a, b) -> a - b);
                 case MUL -> binaryOp(BigInteger::multiply, (a, b) -> a * b);
@@ -123,8 +97,6 @@ public class VirtualMachine {
                         stack.push(new SrValue(a.asFloat() % b.asFloat()));
                     }
                 }
-
-                // --- Logic & Bitwise ---
                 case BIT_AND -> {
                     SrValue b = stack.pop();
                     SrValue a = stack.pop();
@@ -155,8 +127,6 @@ public class VirtualMachine {
                         throw new RuntimeException("Type error: NOT applied to " + val.type);
                     }
                 }
-
-                // --- Comparison ---
                 case EQ -> {
                     SrValue b = stack.pop();
                     SrValue a = stack.pop();
@@ -179,8 +149,6 @@ public class VirtualMachine {
                 case LT -> compareOp((i) -> i < 0);
                 case GTE -> compareOp((i) -> i >= 0);
                 case LTE -> compareOp((i) -> i <= 0);
-
-                // --- Control Flow (2-byte jumps) ---
                 case JMP -> {
                     byte b1 = frame.chunk.code.get(frame.ip++);
                     byte b2 = frame.chunk.code.get(frame.ip++);
@@ -195,8 +163,6 @@ public class VirtualMachine {
                         frame.ip += offset;
                     }
                 }
-
-                // --- Heap (Arrays & Structs) ---
                 case NEW_ARRAY -> {
                     int size = stack.pop().asInt().intValue();
                     allocate(new SrArray(size));
@@ -239,7 +205,6 @@ public class VirtualMachine {
                         throw new RuntimeException("Type Error: len() argument");
                     }
                 }
-
                 case NEW_STRUCT -> {
                     int nameIdx = frame.chunk.code.get(frame.ip++);
                     String structName = frame.chunk.constants.get(nameIdx).asString();
@@ -270,8 +235,6 @@ public class VirtualMachine {
                         throw new RuntimeException("Type Error: Getting field from non-struct");
                     }
                 }
-
-                // --- Built-ins ---
                 case PRINT -> System.out.print(stack.pop());
                 case PRINTLN -> System.out.println(stack.pop());
                 case SQRT -> {
@@ -288,13 +251,9 @@ public class VirtualMachine {
                     }
                 }
                 case RANDOM -> {
-                    // Stack: [min, max] (max is top)
                     BigInteger max = stack.pop().asInt();
                     BigInteger min = stack.pop().asInt();
-
-                    // range = max - min
                     BigInteger range = max.subtract(min);
-
                     if (range.signum() <= 0) {
                         stack.push(new SrValue(min));
                     } else {
@@ -302,13 +261,9 @@ public class VirtualMachine {
                         do {
                             res = new BigInteger(range.bitLength(), random);
                         } while (res.compareTo(range) >= 0);
-
-                        // Result = min + random_offset
                         stack.push(new SrValue(min.add(res)));
                     }
                 }
-
-                // --- Functions ---
                 case CALL -> {
                     int nameIdx = frame.chunk.code.get(frame.ip++);
                     String funcName = frame.chunk.constants.get(nameIdx).asString();
@@ -319,7 +274,6 @@ public class VirtualMachine {
                         throw new RuntimeException("Runtime Error: Function " + funcName + " not found");
                     }
 
-                    // JIT check
                     if (jitEnabled) {
                         int calls = callCounts.getOrDefault(funcChunk, 0) + 1;
                         callCounts.put(funcChunk, calls);
@@ -331,7 +285,6 @@ public class VirtualMachine {
                     }
 
                     CallFrame nextFrame = new CallFrame(funcChunk, stack.size() - argCount);
-                    // Pop args (reverse order)
                     for (int i = argCount - 1; i >= 0; i--) {
                         nextFrame.locals[i] = stack.pop();
                     }
@@ -351,8 +304,6 @@ public class VirtualMachine {
             }
         }
     }
-
-    // --- Helpers ---
 
     private interface BigIntOp { BigInteger apply(BigInteger a, BigInteger b); }
     private interface DoubleOp { double apply(double a, double b); }

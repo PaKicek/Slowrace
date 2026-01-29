@@ -2,10 +2,9 @@ package org.pakicek.parser.ast.node.expression;
 
 import org.pakicek.parser.ast.ASTVisitor;
 
-// Represents access to a struct field: object.field
 public class FieldAccessNode extends ExpressionNode {
-    private final ExpressionNode object; // Left part (variable, array, etc.)
-    private final String fieldName;      // Right part (field identifier)
+    private final ExpressionNode object;
+    private final String fieldName;
 
     public FieldAccessNode(ExpressionNode object, String fieldName, int line, int position) {
         super(line, position);

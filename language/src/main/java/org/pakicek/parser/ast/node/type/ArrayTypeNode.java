@@ -3,11 +3,10 @@ package org.pakicek.parser.ast.node.type;
 import org.pakicek.parser.ast.ASTVisitor;
 import org.pakicek.parser.ast.node.expression.ExpressionNode;
 
-// Represents array types: array type[size] or array type[expression]
 public class ArrayTypeNode extends TypeNode {
     private final TypeNode elementType;
-    private final Integer fixedSize;        // For fixed-size arrays: array int[5]
-    private final ExpressionNode sizeExpression; // For dynamic arrays: array int[n + 1]
+    private final Integer fixedSize;
+    private final ExpressionNode sizeExpression;
 
     public ArrayTypeNode(TypeNode elementType, Integer fixedSize, int line, int position) {
         super(line, position);

@@ -6,7 +6,7 @@ public class SrValue {
     public enum Type { INT, FLOAT, BOOL, STRING, OBJECT, VOID }
 
     public final Type type;
-    private final Object value; // BigInteger, Double, Boolean, String, or SrObject
+    private final Object value;
 
     public SrValue(BigInteger val) { type = Type.INT; value = val; }
     public SrValue(double val) { type = Type.FLOAT; value = val; }
@@ -22,12 +22,10 @@ public class SrValue {
     }
 
     public double asFloat() {
-        // Safe unboxing: if null, return default 0.0
         return value != null ? (Double) value : 0.0;
     }
 
     public boolean asBool() {
-        // Safe unboxing: if null, return false
         return value != null ? (Boolean) value : false;
     }
 

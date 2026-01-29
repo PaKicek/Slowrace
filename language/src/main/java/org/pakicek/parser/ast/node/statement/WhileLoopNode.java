@@ -3,7 +3,6 @@ package org.pakicek.parser.ast.node.statement;
 import org.pakicek.parser.ast.ASTVisitor;
 import org.pakicek.parser.ast.node.expression.ExpressionNode;
 
-// Represents while loop: while (condition) { body }
 public class WhileLoopNode extends StatementNode {
     private final ExpressionNode condition;
     private final BlockStatementNode body;
