@@ -55,12 +55,10 @@ public class ParserExamplesTest {
         assertEquals(1, program.getFunctions().size());
         assertNotNull(program.getMainNode());
 
-        // Check insertion_sort function
         FunctionDeclarationNode sortFunc = program.getFunctions().get(0);
         assertEquals("insertion_sort", sortFunc.getName());
         assertEquals(1, sortFunc.getParameters().size());
 
-        // Check main function
         MainNode main = program.getMainNode();
         assertNotNull(main.getBody());
         assertFalse(main.getBody().getStatements().isEmpty());
@@ -112,16 +110,13 @@ public class ParserExamplesTest {
         assertNotNull(program);
         assertEquals(3, program.getFunctions().size());
 
-        // Check function names
         assertEquals("partition", program.getFunctions().get(0).getName());
         assertEquals("quick_sort_recursive", program.getFunctions().get(1).getName());
         assertEquals("quick_sort", program.getFunctions().get(2).getName());
 
-        // Check recursion call in quick_sort_recursive
         BlockStatementNode body = program.getFunctions().get(1).getBody();
         IfStatementNode ifStmt = (IfStatementNode) body.getStatements().get(0);
         BlockStatementNode thenBlock = ifStmt.getThenBlock();
-        // Should have 3 statements: partition, recursive, recursive
         assertEquals(3, thenBlock.getStatements().size());
         assertTrue(((ExpressionStatementNode)thenBlock.getStatements().get(1)).getExpression() instanceof FunctionCallNode);
     }
@@ -155,11 +150,8 @@ public class ParserExamplesTest {
 
         FunctionDeclarationNode fibFunc = program.getFunctions().get(0);
         assertEquals("fib_iterative", fibFunc.getName());
-
-        // Check return type
         assertNotEquals("void", ((BasicTypeNode) fibFunc.getReturnType()).getTypeName());
 
-        // Check loop structure
         boolean hasLoop = false;
         for(StatementNode stmt : fibFunc.getBody().getStatements()) {
             if (stmt instanceof ForLoopNode) {
@@ -204,12 +196,10 @@ public class ParserExamplesTest {
         assertEquals(2, program.getFunctions().size());
         assertNotNull(program.getMainNode());
 
-        // Check iterative factorial
         FunctionDeclarationNode iterative = program.getFunctions().get(0);
         assertEquals("factorial_iterative", iterative.getName());
         assertEquals(1, iterative.getParameters().size());
 
-        // Check recursive factorial has proper structure
         FunctionDeclarationNode recursive = program.getFunctions().get(1);
         BlockStatementNode body = recursive.getBody();
         assertEquals(2, body.getStatements().size());
@@ -268,11 +258,9 @@ public class ParserExamplesTest {
         assertEquals(1, program.getFunctions().size());
         assertNotNull(program.getMainNode());
 
-        // Check sieve function structure
         FunctionDeclarationNode sieve = program.getFunctions().get(0);
         assertEquals("sieve", sieve.getName());
 
-        // Check complex condition: p * p <= n
         BlockStatementNode body = sieve.getBody();
         IfStatementNode ifStmt = (IfStatementNode) body.getStatements().get(0);
         assertTrue(ifStmt.getCondition() instanceof BinaryExpressionNode);
@@ -317,8 +305,6 @@ public class ParserExamplesTest {
         assertEquals("Body", bodyStruct.getName());
         assertEquals(7, bodyStruct.getFields().size());
 
-        // Check field types
-        // All fields are float
         for(VariableDeclarationNode field : bodyStruct.getFields()) {
             assertTrue(field.getType() instanceof org.pakicek.parser.ast.node.type.BasicTypeNode);
             assertEquals("float", ((org.pakicek.parser.ast.node.type.BasicTypeNode)field.getType()).getTypeName());

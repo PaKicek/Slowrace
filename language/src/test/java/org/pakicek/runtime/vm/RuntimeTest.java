@@ -26,7 +26,6 @@ public class RuntimeTest {
     @Test
     public void testSafeUnboxing() {
         SrValue voidVal = SrValue.VOID;
-        // Should not throw NPE (NullPointerException)
         assertEquals(0.0, voidVal.asFloat(), 0.0001);
         assertFalse(voidVal.asBool());
     }

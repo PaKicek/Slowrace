@@ -8,7 +8,6 @@ public class TokenTest {
     @Test
     public void testTokenCreation() {
         Token token = new Token(TokenType.INT, "int", null, 1, 1);
-
         assertEquals(TokenType.INT, token.getType());
         assertEquals("int", token.getLexeme());
         assertNull(token.getLiteral());
@@ -19,7 +18,6 @@ public class TokenTest {
     @Test
     public void testTokenWithLiteral() {
         Token token = new Token(TokenType.INTEGER_LITERAL, "42", 42L, 2, 5);
-
         assertEquals(TokenType.INTEGER_LITERAL, token.getType());
         assertEquals("42", token.getLexeme());
         assertEquals(42L, token.getLiteral());
@@ -31,7 +29,6 @@ public class TokenTest {
     public void testTokenToString() {
         Token token = new Token(TokenType.STRING_LITERAL, "\"test\"", "test", 3, 10);
         String toString = token.toString();
-
         assertTrue(toString.contains("STRING_LITERAL"));
         assertTrue(toString.contains("\"test\""));
         assertTrue(toString.contains("test"));
