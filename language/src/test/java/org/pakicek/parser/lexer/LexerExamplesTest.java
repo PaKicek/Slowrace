@@ -121,12 +121,10 @@ public class LexerExamplesTest {
         assertTrue(containsTokenType(tokens, TokenType.IF));
         assertTrue(containsTokenType(tokens, TokenType.FOR));
 
-        // Verify identifiers
         assertTrue(containsTokenWithLexeme(tokens, "partition"));
         assertTrue(containsTokenWithLexeme(tokens, "quick_sort"));
         assertTrue(containsTokenWithLexeme(tokens, "random"));
 
-        // No errors
         assertFalse(containsTokenType(tokens, TokenType.ERROR));
     }
 
@@ -161,14 +159,10 @@ public class LexerExamplesTest {
         assertTrue(containsTokenType(tokens, TokenType.IF));
         assertTrue(containsTokenType(tokens, TokenType.FOR));
         assertTrue(containsTokenType(tokens, TokenType.RETURN));
-
-        // Should contain 'fib_iterative' identifier
         assertTrue(containsTokenWithLexeme(tokens, "fib_iterative"));
-
-        // Should contain '<=' operator
         assertTrue(containsTokenType(tokens, TokenType.LESS_EQUAL));
 
-        // No errors
+
         assertFalse(containsTokenType(tokens, TokenType.ERROR));
     }
 
@@ -295,15 +289,11 @@ public class LexerExamplesTest {
 
         assertFalse(tokens.isEmpty());
 
-        // Check for Struct related tokens
         assertTrue("Tokens should contain STRUCT", containsTokenType(tokens, TokenType.STRUCT));
         assertTrue("Tokens should contain DOT", containsTokenType(tokens, TokenType.DOT));
-
-        // Check for Body identifier
         assertTrue("Tokens should contain Body identifier", containsTokenWithLexeme(tokens, "Body"));
         assertTrue("Tokens should contain mass identifier", containsTokenWithLexeme(tokens, "mass"));
 
-        // Check for field access sequence (identifier -> dot -> identifier)
         boolean fieldAccessFound = false;
         for (int i = 0; i < tokens.size() - 2; i++) {
             if (tokens.get(i).getType() == TokenType.IDENTIFIER &&
@@ -314,15 +304,11 @@ public class LexerExamplesTest {
             }
         }
         assertTrue("Should contain field access pattern (obj.prop)", fieldAccessFound);
-
-        // Check for sqrt function call
         assertTrue("Should contain sqrt function", containsTokenWithLexeme(tokens, "sqrt"));
 
-        // No errors
         assertFalse(containsTokenType(tokens, TokenType.ERROR));
     }
 
-    // Helper methods
     private boolean containsTokenType(List<Token> tokens, TokenType type) {
         return tokens.stream().anyMatch(token -> token.getType() == type);
     }

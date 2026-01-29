@@ -3,7 +3,6 @@ package org.pakicek.parser.ast.node.expression.literal;
 import org.pakicek.parser.ast.ASTVisitor;
 import org.pakicek.parser.ast.node.expression.ExpressionNode;
 
-// Represents boolean literal: true, false
 public class BooleanLiteralNode extends ExpressionNode {
     private final boolean value;
 

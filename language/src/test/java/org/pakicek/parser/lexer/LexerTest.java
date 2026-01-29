@@ -37,7 +37,6 @@ public class LexerTest {
 
         assertTokens(expectedTypes, tokens);
 
-        // Testing string literal
         Token stringLiteral = tokens.get(14);
         assertEquals("Hello World!", stringLiteral.getLiteral());
     }
@@ -58,7 +57,6 @@ public class LexerTest {
 
         assertTokens(expectedTypes, tokens);
 
-        // Testing literals
         assertEquals(42L, tokens.get(3).getLiteral());
         assertEquals(3.14, tokens.get(8).getLiteral());
         assertEquals("test", tokens.get(13).getLiteral());
@@ -104,7 +102,6 @@ public class LexerTest {
 
     @Test
     public void testDotVsFloat() {
-        // Check: 3.14 (float), 3.field (int + dot + id), 3. (int + dot)
         String code = "3.14 3.x 3.";
         lexer = new Lexer(code);
         List<Token> tokens = lexer.scanTokens();
@@ -117,7 +114,6 @@ public class LexerTest {
         };
 
         assertTokens(expectedTypes, tokens);
-
         assertEquals(3.14, tokens.get(0).getLiteral());
         assertEquals(3L, tokens.get(1).getLiteral()); // 3
         assertEquals("x", tokens.get(3).getLexeme());
@@ -219,8 +215,6 @@ public class LexerTest {
 
         lexer = new Lexer(code);
         List<Token> tokens = lexer.scanTokens();
-
-        // Testing keywords
         assertTrue(containsTokenType(tokens, TokenType.IF));
         assertTrue(containsTokenType(tokens, TokenType.ELIF));
         assertTrue(containsTokenType(tokens, TokenType.ELSE));
@@ -238,15 +232,12 @@ public class LexerTest {
 
         lexer = new Lexer(code);
         List<Token> tokens = lexer.scanTokens();
-
-        // Comments must be ignored
         TokenType[] expectedTypes = {
                 TokenType.INT, TokenType.IDENTIFIER, TokenType.ASSIGN, TokenType.INTEGER_LITERAL, TokenType.SEMICOLON,
                 TokenType.STRING, TokenType.IDENTIFIER, TokenType.ASSIGN, TokenType.STRING_LITERAL, TokenType.SEMICOLON,
                 TokenType.FLOAT, TokenType.IDENTIFIER, TokenType.ASSIGN, TokenType.FLOAT_LITERAL, TokenType.SEMICOLON,
                 TokenType.EOF
         };
-
         assertTokens(expectedTypes, tokens);
     }
 
@@ -263,13 +254,10 @@ public class LexerTest {
         lexer = new Lexer(code);
         List<Token> tokens = lexer.scanTokens();
 
-        // Must be 3 string literals + EOF
         assertEquals(TokenType.STRING_LITERAL, tokens.get(0).getType());
         assertEquals("Hello World", tokens.get(0).getLiteral());
-
         assertEquals(TokenType.STRING_LITERAL, tokens.get(1).getType());
         assertEquals("Multi\nline\nstring", tokens.get(1).getLiteral());
-
         assertEquals(TokenType.STRING_LITERAL, tokens.get(2).getType());
         assertEquals("String", tokens.get(2).getLiteral());
     }
@@ -280,10 +268,8 @@ public class LexerTest {
         lexer = new Lexer(code);
         List<Token> tokens = lexer.scanTokens();
 
-        // Checking numeric literals
         assertEquals(42L, tokens.get(3).getLiteral());
         assertEquals(3.14, tokens.get(8).getLiteral());
-        // Negative numbers are treated as unary minus + number
         assertEquals(TokenType.MINUS, tokens.get(13).getType());
         assertEquals(100L, tokens.get(14).getLiteral());
         assertEquals(0.001, tokens.get(19).getLiteral());
@@ -294,7 +280,6 @@ public class LexerTest {
         String code = "bool a = true; bool b = false;";
         lexer = new Lexer(code);
         List<Token> tokens = lexer.scanTokens();
-
         assertEquals(true, tokens.get(3).getLiteral());
         assertEquals(false, tokens.get(8).getLiteral());
     }
@@ -323,23 +308,18 @@ public class LexerTest {
         lexer = new Lexer(code);
         List<Token> tokens = lexer.scanTokens();
 
-        // Checking the first token position
         Token firstToken = tokens.get(0);
         assertEquals(TokenType.INT, firstToken.getType());
         assertEquals(1, firstToken.getLine());
         assertEquals(1, firstToken.getPosition());
-
-        // Token 'a'
         Token identifierToken = tokens.get(1);
         assertEquals(TokenType.IDENTIFIER, identifierToken.getType());
         assertEquals(1, identifierToken.getLine());
-        assertEquals(5, identifierToken.getPosition()); // "int a" - 'a' on position 5
-
-        // Token 'string' on the second line
+        assertEquals(5, identifierToken.getPosition());
         Token stringToken = tokens.get(5);
         assertEquals(TokenType.STRING, stringToken.getType());
         assertEquals(2, stringToken.getLine());
-        assertEquals(1, stringToken.getPosition()); // Start of the second line
+        assertEquals(1, stringToken.getPosition());
     }
 
     @Test
@@ -348,23 +328,14 @@ public class LexerTest {
         lexer = new Lexer(code);
         List<Token> tokens = lexer.scanTokens();
 
-        // int - position 1
         assertEquals(1, tokens.get(0).getPosition());
         assertEquals(1, tokens.get(0).getLine());
-
-        // x - position 5 (after "int ")
         assertEquals(5, tokens.get(1).getPosition());
         assertEquals(1, tokens.get(1).getLine());
-
-        // = - position 7
         assertEquals(7, tokens.get(2).getPosition());
         assertEquals(1, tokens.get(2).getLine());
-
-        // 42 - position 9
         assertEquals(9, tokens.get(3).getPosition());
         assertEquals(1, tokens.get(3).getLine());
-
-        // ; - position 11
         assertEquals(11, tokens.get(4).getPosition());
         assertEquals(1, tokens.get(4).getLine());
     }
@@ -375,18 +346,11 @@ public class LexerTest {
         lexer = new Lexer(code);
         List<Token> tokens = lexer.scanTokens();
 
-        // Must be 3 identifiers + EOF
         assertEquals(4, tokens.size());
-
-        // line1 - line 1, position 1
         assertEquals(1, tokens.get(0).getLine());
         assertEquals(1, tokens.get(0).getPosition());
-
-        // line2 - line 2, position 1
         assertEquals(2, tokens.get(1).getLine());
         assertEquals(1, tokens.get(1).getPosition());
-
-        // line3 - line 3, position 1
         assertEquals(3, tokens.get(2).getLine());
         assertEquals(1, tokens.get(2).getPosition());
     }
@@ -411,8 +375,6 @@ public class LexerTest {
     public void testUnterminatedString() {
         Lexer lexer = new Lexer("string s = \"unterminated;");
         List<Token> tokens = lexer.scanTokens();
-
-        // Must catch ERROR on unfinished string
         assertTrue(containsTokenType(tokens, TokenType.ERROR));
     }
 
@@ -420,7 +382,6 @@ public class LexerTest {
     public void testLargeNumbers() {
         Lexer lexer = new Lexer("int big = 9223372036854775807; float small = 0.0000001;");
         List<Token> tokens = lexer.scanTokens();
-
         assertEquals(9223372036854775807L, tokens.get(3).getLiteral());
         assertEquals(0.0000001, tokens.get(8).getLiteral());
     }
@@ -430,8 +391,6 @@ public class LexerTest {
         String code = "if (a && b || c & d | e) { result = (x + y) * z / w; }";
         Lexer lexer = new Lexer(code);
         List<Token> tokens = lexer.scanTokens();
-
-        // Testing if all operators are recognized correctly
         assertTrue(containsTokenType(tokens, TokenType.AND));
         assertTrue(containsTokenType(tokens, TokenType.OR));
         assertTrue(containsTokenType(tokens, TokenType.BITWISE_AND));
@@ -452,7 +411,6 @@ public class LexerTest {
         Lexer lexer = new Lexer(code);
         List<Token> tokens = lexer.scanTokens();
 
-        // Testing keywords
         assertTrue(containsTokenType(tokens, TokenType.FUNC));
         assertTrue(containsTokenType(tokens, TokenType.VOID));
         assertTrue(containsTokenType(tokens, TokenType.ARRAY));
@@ -466,7 +424,6 @@ public class LexerTest {
         Lexer lexer = new Lexer(code);
         List<Token> tokens = lexer.scanTokens();
 
-        // All identifiers must be recognized correctly
         assertEquals(TokenType.IDENTIFIER, tokens.get(0).getType());
         assertEquals(TokenType.IDENTIFIER, tokens.get(4).getType());
         assertEquals(TokenType.IDENTIFIER, tokens.get(8).getType());
@@ -493,18 +450,15 @@ public class LexerTest {
         Lexer lexer = new Lexer(code);
         List<Token> tokens = lexer.scanTokens();
 
-        // There should be only code tokens, no comments
-        assertEquals(11, tokens.size()); // int, identifier, =, number, ;, string, identifier, =, string, ;, EOF
+        assertEquals(11, tokens.size());
         assertEquals(TokenType.INT, tokens.get(0).getType());
         assertEquals(TokenType.STRING, tokens.get(5).getType());
     }
 
     private void assertTokens(TokenType[] expectedTypes, List<Token> actualTokens) {
         assertEquals("The number of tokens does not match", expectedTypes.length, actualTokens.size());
-
         for (int i = 0; i < expectedTypes.length; i++) {
-            assertEquals("The token at position " + i + " does not match",
-                    expectedTypes[i], actualTokens.get(i).getType());
+            assertEquals("The token at position " + i + " does not match", expectedTypes[i], actualTokens.get(i).getType());
         }
     }
 

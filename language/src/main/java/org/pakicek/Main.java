@@ -18,7 +18,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Main {
-
     private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
 
     public static void main(String[] args) {
@@ -64,64 +63,37 @@ public class Main {
         }
     }
 
-    /**
-     * Compile source code directly to memory and execute it.
-     */
     private static void handleRunSource(String filename, String[] args, boolean jitEnabled) throws IOException {
         long start = System.currentTimeMillis();
-
-        // 1. Read Source
         String source = Files.readString(Path.of(filename));
-
-        // 2. Compile pipeline
         ProgramImage image = compilePipeline(source);
-
-        // 3. Run VM
         VirtualMachine vm = new VirtualMachine();
         vm.setJitEnabled(jitEnabled);
         vm.run(image, args);
-
         long end = System.currentTimeMillis();
         System.out.println("\n[Finished in " + (end - start) + "ms]");
     }
 
-    /**
-     * Compile source code and save to .srbyte file.
-     */
     private static void handleCompile(String inputFile, String outputFile) throws IOException {
         System.out.println("Compiling " + inputFile + "...");
-
         String source = Files.readString(Path.of(inputFile));
         ProgramImage image = compilePipeline(source);
-
         BytecodeIO.write(image, outputFile);
         System.out.println("Output written to " + outputFile);
     }
 
-    /**
-     * Mode 3: Load compiled bytecode from file and execute it.
-     */
     private static void handleExecBytecode(String filename, String[] args, boolean jitEnabled) throws IOException {
         ProgramImage image = BytecodeIO.read(filename);
-
         VirtualMachine vm = new VirtualMachine();
         vm.setJitEnabled(jitEnabled);
         vm.run(image, args);
     }
 
-    /**
-     * Shared logic: Lexer -> Parser -> Compiler
-     */
     private static ProgramImage compilePipeline(String source) {
-        // 1. Lexing
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.scanTokens();
-
-        // 2. Parsing
         Parser parser = new Parser(tokens);
         ProgramNode ast = parser.parse();
-
-        // 3. Compiling
         BytecodeCompiler compiler = new BytecodeCompiler();
         return compiler.compile(ast);
     }

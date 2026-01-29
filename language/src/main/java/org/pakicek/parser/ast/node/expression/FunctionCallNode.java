@@ -5,7 +5,6 @@ import org.pakicek.parser.ast.ASTVisitor;
 import java.util.ArrayList;
 import java.util.List;
 
-// Represents function call: name(arg1, arg2, ...)
 public class FunctionCallNode extends ExpressionNode {
     private final String functionName;
     private final List<ExpressionNode> arguments;

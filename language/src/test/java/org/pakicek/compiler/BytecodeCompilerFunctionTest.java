@@ -35,7 +35,6 @@ public class BytecodeCompilerFunctionTest {
         ProgramImage image = compiler.compile(program);
         Chunk mainChunk = image.mainChunk;
 
-        // Check Main calls function
         boolean hasCall = false;
         for (byte b : mainChunk.code) {
             if (OpCode.values()[b] == OpCode.CALL) {
@@ -45,16 +44,12 @@ public class BytecodeCompilerFunctionTest {
         }
         assertTrue("Main should contain CALL opcode", hasCall);
 
-        // Check Function exists in registry
         Map<String, Chunk> functions = compiler.getFunctions();
         assertTrue(functions.containsKey("add"));
 
         Chunk addChunk = functions.get("add");
         assertNotNull(addChunk);
 
-        // Check Function body
-        // Should have LOAD_LOCAL (a), LOAD_LOCAL (b), ADD, RETURN
-        // a and b are locals 0 and 1
         boolean hasLoadLocal = false;
         boolean hasAdd = false;
         boolean hasReturn = false;

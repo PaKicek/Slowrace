@@ -2,7 +2,6 @@ package org.pakicek.parser.ast.node.expression;
 
 import org.pakicek.parser.ast.ASTVisitor;
 
-// Represents assignment: variable = expression
 public class AssignmentNode extends ExpressionNode {
     private final ExpressionNode target;
     private final ExpressionNode value;

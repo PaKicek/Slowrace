@@ -2,7 +2,6 @@ package org.pakicek.parser.ast.node.type;
 
 import org.pakicek.parser.ast.ASTVisitor;
 
-// Represents basic types: int, float, string, bool, void
 public class BasicTypeNode extends TypeNode {
     private final String typeName;
 

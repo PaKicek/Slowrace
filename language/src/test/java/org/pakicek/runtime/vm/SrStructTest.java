@@ -17,14 +17,9 @@ public class SrStructTest {
     public void testFieldAccess() {
         SrStruct vector = new SrStruct("Vector");
 
-        // Add fields
         vector.fields.put("x", new SrValue(10.5));
         vector.fields.put("y", new SrValue(20.5));
-
-        // Check size
         assertEquals(2, vector.getSize());
-
-        // Check values
         assertEquals(10.5, vector.fields.get("x").asFloat(), 0.0001);
         assertEquals(20.5, vector.fields.get("y").asFloat(), 0.0001);
     }
@@ -41,7 +36,6 @@ public class SrStructTest {
         line.fields.put("start", new SrValue(p1));
         line.fields.put("end", new SrValue(p2));
 
-        // Verify nesting
         SrValue startVal = line.fields.get("start");
         assertEquals(SrValue.Type.OBJECT, startVal.type);
         assertTrue(startVal.asObject() instanceof SrStruct);

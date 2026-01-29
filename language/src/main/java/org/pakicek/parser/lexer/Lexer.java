@@ -20,14 +20,11 @@ public class Lexer {
 
     static {
         keywords = new HashMap<>();
-        // Data types
         keywords.put("int", TokenType.INT);
         keywords.put("float", TokenType.FLOAT);
         keywords.put("string", TokenType.STRING);
         keywords.put("bool", TokenType.BOOL);
         keywords.put("void", TokenType.VOID);
-
-        // Keywords
         keywords.put("array", TokenType.ARRAY);
         keywords.put("func", TokenType.FUNC);
         keywords.put("struct", TokenType.STRUCT);
@@ -38,8 +35,6 @@ public class Lexer {
         keywords.put("elif", TokenType.ELIF);
         keywords.put("for", TokenType.FOR);
         keywords.put("while", TokenType.WHILE);
-
-        // Logic values
         keywords.put("true", TokenType.BOOLEAN_LITERAL);
         keywords.put("false", TokenType.BOOLEAN_LITERAL);
     }
@@ -63,7 +58,6 @@ public class Lexer {
     private void scanToken() {
         char c = advance();
         switch (c) {
-            // Single symbols
             case '(': addToken(TokenType.LEFT_PAREN); break;
             case ')': addToken(TokenType.RIGHT_PAREN); break;
             case '{': addToken(TokenType.LEFT_BRACE); break;
@@ -73,8 +67,6 @@ public class Lexer {
             case ',': addToken(TokenType.COMMA); break;
             case ';': addToken(TokenType.SEMICOLON); break;
             case '.': addToken(TokenType.DOT); break;
-
-            // Operators
             case '+':
                 if (match('+')) {
                     addToken(TokenType.INCREMENT);
@@ -92,7 +84,6 @@ public class Lexer {
             case '*': addToken(TokenType.MULTIPLY); break;
             case '/':
                 if (match('/')) {
-                    // Comments - we skip to the end of line
                     while (peek() != '\n' && !isAtEnd()) advance();
                 } else {
                     addToken(TokenType.DIVIDE);
@@ -142,21 +133,15 @@ public class Lexer {
                     addToken(TokenType.LESS);
                 }
                 break;
-
-            // Space symbols
             case ' ':
             case '\r':
             case '\t':
-                // Ignore spaces
                 break;
             case '\n':
                 line++;
                 position = 1;
                 break;
-
-            // String literals
             case '"': string(); break;
-
             default:
                 if (isDigit(c)) {
                     number();
@@ -179,7 +164,6 @@ public class Lexer {
             type = TokenType.IDENTIFIER;
         }
 
-        // Processing boolean literals
         Object literal = null;
         if (type == TokenType.BOOLEAN_LITERAL) {
             literal = Boolean.valueOf(text);
@@ -193,10 +177,8 @@ public class Lexer {
 
         while (isDigit(peek())) advance();
 
-        // Check for float (with dot as the delimiter)
         if (peek() == '.' && isDigit(peekNext())) {
             isFloat = true;
-
             do advance();
             while (isDigit(peek()));
         }
@@ -224,9 +206,7 @@ public class Lexer {
             return;
         }
 
-        advance(); // Closing quote
-
-        // Getting a value without quotes
+        advance();
         String value = source.substring(start + 1, current - 1);
         addToken(TokenType.STRING_LITERAL, value);
     }

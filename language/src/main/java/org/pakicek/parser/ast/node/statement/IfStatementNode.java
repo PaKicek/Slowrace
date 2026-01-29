@@ -6,7 +6,6 @@ import org.pakicek.parser.ast.node.expression.ExpressionNode;
 import java.util.ArrayList;
 import java.util.List;
 
-// Represents if statement: if (condition) { thenBlock } [elif...] [else...]
 public class IfStatementNode extends StatementNode {
     private final ExpressionNode condition;
     private final BlockStatementNode thenBlock;
@@ -48,8 +47,7 @@ public class IfStatementNode extends StatementNode {
     public <T> T accept(ASTVisitor<T> visitor) {
         return visitor.visit(this);
     }
-
-    // Inner class for elif branches
+    
     public static class ElifBranch {
         private final ExpressionNode condition;
         private final BlockStatementNode block;

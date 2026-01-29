@@ -6,7 +6,6 @@ import org.pakicek.parser.ast.node.expression.ExpressionNode;
 import java.util.ArrayList;
 import java.util.List;
 
-// Represents array literal: [element1, element2, ...]
 public class ArrayLiteralNode extends ExpressionNode {
     private final List<ExpressionNode> elements;
 

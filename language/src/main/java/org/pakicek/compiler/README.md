@@ -78,4 +78,3 @@ BytecodeIO.write(programImage, "program.srbyte");
 
 // Загрузка
 ProgramImage loadedProgram = BytecodeIO.read("program.srbyte");
-

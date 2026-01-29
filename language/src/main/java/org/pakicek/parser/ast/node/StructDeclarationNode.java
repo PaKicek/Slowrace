@@ -6,7 +6,6 @@ import org.pakicek.parser.ast.node.statement.VariableDeclarationNode;
 import java.util.ArrayList;
 import java.util.List;
 
-// Represents struct declaration: struct Name { type field1; type field2; }
 public class StructDeclarationNode extends ASTNode {
     private final String name;
     private final List<VariableDeclarationNode> fields;

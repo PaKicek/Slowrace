@@ -3,7 +3,6 @@ package org.pakicek.parser.ast.node.expression.literal;
 import org.pakicek.parser.ast.ASTVisitor;
 import org.pakicek.parser.ast.node.expression.ExpressionNode;
 
-// Represents integer literal: 42, -100, etc.
 public class IntegerLiteralNode extends ExpressionNode {
     private final long value;
 

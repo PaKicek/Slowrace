@@ -8,10 +8,8 @@ public class SrArrayTest {
 
     @Test
     public void testArrayInitialization() {
-        // Arrays should be initialized with default values (0)
         int size = 5;
         SrArray array = new SrArray(size);
-
         assertEquals(size, array.getSize());
         for (int i = 0; i < size; i++) {
             assertNotNull(array.elements[i]);
@@ -26,7 +24,6 @@ public class SrArrayTest {
         array.elements[0] = new SrValue("First");
         array.elements[1] = new SrValue(true);
         array.elements[2] = new SrValue(3.14);
-
         assertEquals("First", array.elements[0].asString());
         assertTrue(array.elements[1].asBool());
         assertEquals(3.14, array.elements[2].asFloat(), 0.0001);
