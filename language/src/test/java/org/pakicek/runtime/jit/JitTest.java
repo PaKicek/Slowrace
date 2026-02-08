@@ -1,13 +1,13 @@
 package org.pakicek.runtime.jit;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.pakicek.runtime.bytecode.Chunk;
 import org.pakicek.runtime.bytecode.OpCode;
 import org.pakicek.runtime.vm.SrValue;
 
 import java.math.BigInteger;
-
-import static org.junit.Assert.*;
 
 public class JitTest {
 
@@ -61,7 +61,7 @@ public class JitTest {
         JitOptimizer jit = new JitOptimizer();
         Chunk optimized = jit.optimize(chunk);
         assertEquals(3, optimized.code.size());
-        assertEquals(OpCode.LOAD_LOCAL, OpCode.values()[optimized.code.get(0)]);
+        assertEquals(OpCode.LOAD_LOCAL, OpCode.values()[optimized.code.getFirst()]);
     }
 
     @Test
@@ -97,6 +97,6 @@ public class JitTest {
         Chunk optimized = jit.optimize(chunk);
 
         assertEquals(1, optimized.code.size());
-        assertEquals(OpCode.RETURN, OpCode.values()[optimized.code.get(0)]);
+        assertEquals(OpCode.RETURN, OpCode.values()[optimized.code.getFirst()]);
     }
 }

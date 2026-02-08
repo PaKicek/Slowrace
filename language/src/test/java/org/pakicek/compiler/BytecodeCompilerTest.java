@@ -1,6 +1,8 @@
 package org.pakicek.compiler;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.pakicek.parser.Parser;
 import org.pakicek.parser.ast.node.*;
 import org.pakicek.parser.lexer.Lexer;
@@ -10,8 +12,6 @@ import org.pakicek.runtime.bytecode.Chunk;
 import org.pakicek.runtime.bytecode.OpCode;
 
 import java.util.List;
-
-import static org.junit.Assert.*;
 
 public class BytecodeCompilerTest {
 

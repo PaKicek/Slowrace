@@ -1,61 +1,64 @@
 package org.pakicek.parser;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
 import org.pakicek.parser.lexer.Lexer;
 import org.pakicek.parser.lexer.Token;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 public class ParserErrorTest {
 
-    @Test(expected = Parser.ParseError.class)
+    @Test
     public void testMissingSemicolon() {
         String code = """
             func void test() {
                 int a = 5  // missing semicolon
             }
             """;
-        parseAndExpectError(code);
+        assertThrows(Parser.ParseError.class, () -> parseAndExpectError(code));
     }
 
-    @Test(expected = Parser.ParseError.class)
+    @Test
     public void testMissingBrace() {
         String code = """
             func void test() {
                 int a = 5;
             // missing closing brace
             """;
-        parseAndExpectError(code);
+        assertThrows(Parser.ParseError.class, () -> parseAndExpectError(code));
     }
 
-    @Test(expected = Parser.ParseError.class)
+    @Test
     public void testInvalidAssignment() {
         String code = """
             func void test() {
                 5 = 10;  // cannot assign to literal
             }
             """;
-        parseAndExpectError(code);
+        assertThrows(Parser.ParseError.class, () -> parseAndExpectError(code));
     }
 
-    @Test(expected = Parser.ParseError.class)
+    @Test
     public void testMissingParenthesis() {
         String code = """
             func void test(int a {
                 return a;
             }
             """;
-        parseAndExpectError(code);
+        assertThrows(Parser.ParseError.class, () -> parseAndExpectError(code));
     }
 
-    @Test(expected = Parser.ParseError.class)
+    @Test
     public void testUnexpectedToken() {
         String code = """
             func void test() {
                 int a = = 5;  // double equals
             }
             """;
-        parseAndExpectError(code);
+        assertThrows(Parser.ParseError.class, () -> parseAndExpectError(code));
     }
 
     private void parseAndExpectError(String code) {

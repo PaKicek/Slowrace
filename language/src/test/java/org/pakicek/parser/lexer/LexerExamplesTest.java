@@ -1,7 +1,7 @@
 package org.pakicek.parser.lexer;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
@@ -289,10 +289,10 @@ public class LexerExamplesTest {
 
         assertFalse(tokens.isEmpty());
 
-        assertTrue("Tokens should contain STRUCT", containsTokenType(tokens, TokenType.STRUCT));
-        assertTrue("Tokens should contain DOT", containsTokenType(tokens, TokenType.DOT));
-        assertTrue("Tokens should contain Body identifier", containsTokenWithLexeme(tokens, "Body"));
-        assertTrue("Tokens should contain mass identifier", containsTokenWithLexeme(tokens, "mass"));
+        assertTrue(containsTokenType(tokens, TokenType.STRUCT), "Tokens should contain STRUCT");
+        assertTrue(containsTokenType(tokens, TokenType.DOT), "Tokens should contain DOT");
+        assertTrue(containsTokenWithLexeme(tokens, "Body"), "Tokens should contain Body identifier");
+        assertTrue(containsTokenWithLexeme(tokens, "mass"), "Tokens should contain mass identifier");
 
         boolean fieldAccessFound = false;
         for (int i = 0; i < tokens.size() - 2; i++) {
@@ -303,8 +303,8 @@ public class LexerExamplesTest {
                 break;
             }
         }
-        assertTrue("Should contain field access pattern (obj.prop)", fieldAccessFound);
-        assertTrue("Should contain sqrt function", containsTokenWithLexeme(tokens, "sqrt"));
+        assertTrue(fieldAccessFound, "Should contain field access pattern (obj.prop)");
+        assertTrue(containsTokenWithLexeme(tokens, "sqrt"), "Should contain sqrt function");
 
         assertFalse(containsTokenType(tokens, TokenType.ERROR));
     }

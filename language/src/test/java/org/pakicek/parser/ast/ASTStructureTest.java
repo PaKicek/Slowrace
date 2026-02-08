@@ -1,7 +1,7 @@
 package org.pakicek.parser.ast;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.pakicek.parser.Parser;
 import org.pakicek.parser.ast.node.*;
@@ -36,7 +36,7 @@ public class ASTStructureTest {
         Parser parser = new Parser(tokens);
         ProgramNode program = parser.parse();
 
-        BlockStatementNode body = program.getFunctions().get(0).getBody();
+        BlockStatementNode body = program.getFunctions().getFirst().getBody();
 
         Class<?>[] expectedTypes = {
                 IntegerLiteralNode.class,
@@ -53,7 +53,7 @@ public class ASTStructureTest {
         for (int i = 0; i < expectedTypes.length; i++) {
             ExpressionStatementNode exprStmt = (ExpressionStatementNode) body.getStatements().get(i);
             AssignmentNode assignment = (AssignmentNode) exprStmt.getExpression();
-            assertTrue("Expression " + i + " should be " + expectedTypes[i].getSimpleName(), expectedTypes[i].isInstance(assignment.getValue()));
+            assertTrue(expectedTypes[i].isInstance(assignment.getValue()), "Expression " + i + " should be " + expectedTypes[i].getSimpleName());
         }
     }
 
@@ -78,16 +78,16 @@ public class ASTStructureTest {
         Parser parser = new Parser(tokens);
         ProgramNode program = parser.parse();
 
-        FunctionDeclarationNode function = program.getFunctions().get(0);
+        FunctionDeclarationNode function = program.getFunctions().getFirst();
 
         assertEquals("int", ((BasicTypeNode) function.getParameters().get(0).getType()).getTypeName());
         assertEquals("float", ((BasicTypeNode) function.getParameters().get(1).getType()).getTypeName());
         assertEquals("string", ((BasicTypeNode) function.getParameters().get(2).getType()).getTypeName());
         assertEquals("bool", ((BasicTypeNode) function.getParameters().get(3).getType()).getTypeName());
 
-        assertTrue(function.getParameters().get(4).getType() instanceof ArrayTypeNode);
-        assertTrue(function.getParameters().get(5).getType() instanceof ArrayTypeNode);
-        assertTrue(function.getParameters().get(6).getType() instanceof StructTypeNode);
+        assertInstanceOf(ArrayTypeNode.class, function.getParameters().get(4).getType());
+        assertInstanceOf(ArrayTypeNode.class, function.getParameters().get(5).getType());
+        assertInstanceOf(StructTypeNode.class, function.getParameters().get(6).getType());
         assertEquals("Point", ((StructTypeNode) function.getParameters().get(6).getType()).getStructName());
     }
 
@@ -110,25 +110,25 @@ public class ASTStructureTest {
         ProgramNode program = parser.parse();
 
         assertEquals(1, program.getStructs().size());
-        StructDeclarationNode struct = program.getStructs().get(0);
+        StructDeclarationNode struct = program.getStructs().getFirst();
         assertEquals("Point", struct.getName());
         assertEquals(2, struct.getFields().size());
-        assertEquals("x", struct.getFields().get(0).getName());
-        assertEquals("float", ((BasicTypeNode) struct.getFields().get(0).getType()).getTypeName());
+        assertEquals("x", struct.getFields().getFirst().getName());
+        assertEquals("float", ((BasicTypeNode) struct.getFields().getFirst().getType()).getTypeName());
 
         assertEquals(1, program.getFunctions().size());
-        FunctionDeclarationNode func = program.getFunctions().get(0);
+        FunctionDeclarationNode func = program.getFunctions().getFirst();
         assertEquals("move", func.getName());
-        assertTrue(func.getParameters().get(0).getType() instanceof StructTypeNode);
-        assertEquals("Point", ((StructTypeNode) func.getParameters().get(0).getType()).getStructName());
+        assertInstanceOf(StructTypeNode.class, func.getParameters().getFirst().getType());
+        assertEquals("Point", ((StructTypeNode) func.getParameters().getFirst().getType()).getStructName());
 
-        ExpressionStatementNode stmt = (ExpressionStatementNode) func.getBody().getStatements().get(0);
+        ExpressionStatementNode stmt = (ExpressionStatementNode) func.getBody().getStatements().getFirst();
         AssignmentNode assign = (AssignmentNode) stmt.getExpression();
 
-        assertTrue(assign.getTarget() instanceof FieldAccessNode);
+        assertInstanceOf(FieldAccessNode.class, assign.getTarget());
         FieldAccessNode fieldAccess = (FieldAccessNode) assign.getTarget();
         assertEquals("x", fieldAccess.getFieldName());
-        assertTrue(fieldAccess.getObject() instanceof VariableNode);
+        assertInstanceOf(VariableNode.class, fieldAccess.getObject());
         assertEquals("p", ((VariableNode) fieldAccess.getObject()).getName());
     }
 }

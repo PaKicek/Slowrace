@@ -1,6 +1,8 @@
 package org.pakicek.compiler;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.pakicek.parser.Parser;
 import org.pakicek.parser.ast.node.ProgramNode;
 import org.pakicek.parser.lexer.Lexer;
@@ -11,8 +13,6 @@ import org.pakicek.runtime.bytecode.OpCode;
 
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.Assert.*;
 
 public class BytecodeCompilerFunctionTest {
 
@@ -42,7 +42,7 @@ public class BytecodeCompilerFunctionTest {
                 break;
             }
         }
-        assertTrue("Main should contain CALL opcode", hasCall);
+        assertTrue(hasCall, "Main should contain CALL opcode");
 
         Map<String, Chunk> functions = compiler.getFunctions();
         assertTrue(functions.containsKey("add"));

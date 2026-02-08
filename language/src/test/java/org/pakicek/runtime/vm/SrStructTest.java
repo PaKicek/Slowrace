@@ -1,8 +1,9 @@
 package org.pakicek.runtime.vm;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.math.BigInteger;
-import static org.junit.Assert.*;
 
 public class SrStructTest {
 
@@ -38,7 +39,7 @@ public class SrStructTest {
 
         SrValue startVal = line.fields.get("start");
         assertEquals(SrValue.Type.OBJECT, startVal.type);
-        assertTrue(startVal.asObject() instanceof SrStruct);
+        assertInstanceOf(SrStruct.class, startVal.asObject());
 
         SrStruct startPoint = (SrStruct) startVal.asObject();
         assertEquals(BigInteger.ZERO, startPoint.fields.get("x").asInt());

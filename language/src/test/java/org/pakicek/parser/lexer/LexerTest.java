@@ -1,7 +1,8 @@
 package org.pakicek.parser.lexer;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.util.List;
 
 public class LexerTest {
@@ -13,7 +14,7 @@ public class LexerTest {
         List<Token> tokens = lexer.scanTokens();
 
         assertEquals(1, tokens.size());
-        assertEquals(TokenType.EOF, tokens.get(0).getType());
+        assertEquals(TokenType.EOF, tokens.getFirst().getType());
     }
 
     @Test
@@ -308,7 +309,7 @@ public class LexerTest {
         lexer = new Lexer(code);
         List<Token> tokens = lexer.scanTokens();
 
-        Token firstToken = tokens.get(0);
+        Token firstToken = tokens.getFirst();
         assertEquals(TokenType.INT, firstToken.getType());
         assertEquals(1, firstToken.getLine());
         assertEquals(1, firstToken.getPosition());
@@ -456,9 +457,9 @@ public class LexerTest {
     }
 
     private void assertTokens(TokenType[] expectedTypes, List<Token> actualTokens) {
-        assertEquals("The number of tokens does not match", expectedTypes.length, actualTokens.size());
+        assertEquals(expectedTypes.length, actualTokens.size(), "The number of tokens does not match");
         for (int i = 0; i < expectedTypes.length; i++) {
-            assertEquals("The token at position " + i + " does not match", expectedTypes[i], actualTokens.get(i).getType());
+            assertEquals(expectedTypes[i], actualTokens.get(i).getType(), "The token at position " + i + " does not match");
         }
     }
 

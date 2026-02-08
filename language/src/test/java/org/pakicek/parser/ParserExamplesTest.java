@@ -1,7 +1,8 @@
 package org.pakicek.parser;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.pakicek.parser.ast.node.*;
 import org.pakicek.parser.ast.node.expression.*;
 import org.pakicek.parser.ast.node.statement.*;
@@ -55,7 +56,7 @@ public class ParserExamplesTest {
         assertEquals(1, program.getFunctions().size());
         assertNotNull(program.getMainNode());
 
-        FunctionDeclarationNode sortFunc = program.getFunctions().get(0);
+        FunctionDeclarationNode sortFunc = program.getFunctions().getFirst();
         assertEquals("insertion_sort", sortFunc.getName());
         assertEquals(1, sortFunc.getParameters().size());
 
@@ -115,10 +116,10 @@ public class ParserExamplesTest {
         assertEquals("quick_sort", program.getFunctions().get(2).getName());
 
         BlockStatementNode body = program.getFunctions().get(1).getBody();
-        IfStatementNode ifStmt = (IfStatementNode) body.getStatements().get(0);
+        IfStatementNode ifStmt = (IfStatementNode) body.getStatements().getFirst();
         BlockStatementNode thenBlock = ifStmt.getThenBlock();
         assertEquals(3, thenBlock.getStatements().size());
-        assertTrue(((ExpressionStatementNode)thenBlock.getStatements().get(1)).getExpression() instanceof FunctionCallNode);
+        assertInstanceOf(FunctionCallNode.class, ((ExpressionStatementNode) thenBlock.getStatements().get(1)).getExpression());
     }
 
     @Test
@@ -148,7 +149,7 @@ public class ParserExamplesTest {
         assertNotNull(program);
         assertEquals(1, program.getFunctions().size());
 
-        FunctionDeclarationNode fibFunc = program.getFunctions().get(0);
+        FunctionDeclarationNode fibFunc = program.getFunctions().getFirst();
         assertEquals("fib_iterative", fibFunc.getName());
         assertNotEquals("void", ((BasicTypeNode) fibFunc.getReturnType()).getTypeName());
 
@@ -159,7 +160,7 @@ public class ParserExamplesTest {
                 break;
             }
         }
-        assertTrue("Fibonacci function should have a loop", hasLoop);
+        assertTrue(hasLoop, "Fibonacci function should have a loop");
     }
 
     @Test
@@ -196,15 +197,15 @@ public class ParserExamplesTest {
         assertEquals(2, program.getFunctions().size());
         assertNotNull(program.getMainNode());
 
-        FunctionDeclarationNode iterative = program.getFunctions().get(0);
+        FunctionDeclarationNode iterative = program.getFunctions().getFirst();
         assertEquals("factorial_iterative", iterative.getName());
         assertEquals(1, iterative.getParameters().size());
 
         FunctionDeclarationNode recursive = program.getFunctions().get(1);
         BlockStatementNode body = recursive.getBody();
         assertEquals(2, body.getStatements().size());
-        assertTrue(body.getStatements().get(0) instanceof IfStatementNode);
-        assertTrue(body.getStatements().get(1) instanceof ReturnStatementNode);
+        assertInstanceOf(IfStatementNode.class, body.getStatements().get(0));
+        assertInstanceOf(ReturnStatementNode.class, body.getStatements().get(1));
     }
 
     @Test
@@ -258,12 +259,12 @@ public class ParserExamplesTest {
         assertEquals(1, program.getFunctions().size());
         assertNotNull(program.getMainNode());
 
-        FunctionDeclarationNode sieve = program.getFunctions().get(0);
+        FunctionDeclarationNode sieve = program.getFunctions().getFirst();
         assertEquals("sieve", sieve.getName());
 
         BlockStatementNode body = sieve.getBody();
-        IfStatementNode ifStmt = (IfStatementNode) body.getStatements().get(0);
-        assertTrue(ifStmt.getCondition() instanceof BinaryExpressionNode);
+        IfStatementNode ifStatement = (IfStatementNode) body.getStatements().getFirst();
+        assertInstanceOf(BinaryExpressionNode.class, ifStatement.getCondition());
     }
 
     @Test
@@ -301,12 +302,12 @@ public class ParserExamplesTest {
         assertEquals(1, program.getFunctions().size());
         assertNotNull(program.getMainNode());
 
-        StructDeclarationNode bodyStruct = program.getStructs().get(0);
+        StructDeclarationNode bodyStruct = program.getStructs().getFirst();
         assertEquals("Body", bodyStruct.getName());
         assertEquals(7, bodyStruct.getFields().size());
 
         for(VariableDeclarationNode field : bodyStruct.getFields()) {
-            assertTrue(field.getType() instanceof org.pakicek.parser.ast.node.type.BasicTypeNode);
+            assertInstanceOf(BasicTypeNode.class, field.getType());
             assertEquals("float", ((org.pakicek.parser.ast.node.type.BasicTypeNode)field.getType()).getTypeName());
         }
     }

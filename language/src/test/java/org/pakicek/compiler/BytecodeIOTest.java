@@ -1,6 +1,8 @@
 package org.pakicek.compiler;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.pakicek.runtime.ProgramImage;
 import org.pakicek.runtime.bytecode.Chunk;
 import org.pakicek.runtime.bytecode.OpCode;
@@ -11,8 +13,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.junit.Assert.*;
 
 public class BytecodeIOTest {
 
@@ -38,11 +38,11 @@ public class BytecodeIOTest {
         assertEquals(original.mainChunk.code.size(), loaded.mainChunk.code.size());
         assertEquals(original.mainChunk.constants.size(), loaded.mainChunk.constants.size());
 
-        SrValue valOriginal = original.mainChunk.constants.get(0);
-        SrValue valLoaded = loaded.mainChunk.constants.get(0);
+        SrValue valOriginal = original.mainChunk.constants.getFirst();
+        SrValue valLoaded = loaded.mainChunk.constants.getFirst();
         assertEquals(valOriginal.asInt(), valLoaded.asInt());
 
-        for(int i=0; i<original.mainChunk.code.size(); i++) {
+        for (int i = 0; i < original.mainChunk.code.size(); i++) {
             assertEquals(original.mainChunk.code.get(i), loaded.mainChunk.code.get(i));
         }
 
@@ -50,6 +50,6 @@ public class BytecodeIOTest {
         assertTrue(loaded.functions.containsKey("myFunc"));
         assertEquals(1, loaded.functions.get("myFunc").code.size());
 
-        assertTrue("Could not delete temp file", tempFile.delete());
+        assertTrue(tempFile.delete(), "Could not delete temp file");
     }
 }
