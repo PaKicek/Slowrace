@@ -107,7 +107,6 @@ public class IntegrationTest {
 
     @Test
     public void testArraysAndGC() {
-        // This test creates garbage arrays in a loop to trigger GC аnd validates that the final array is still intact
         String code = """
             main (int argc, array string argv[]) {
                 array int keeper[5];
@@ -147,7 +146,6 @@ public class IntegrationTest {
 
     @Test
     public void testRecursionAndJit() {
-        // Recursive Fibonacci to test function calls, stack depth and trigger JIT
         String code = """
             func int fib(int n) {
                 if (n <= 1) {
@@ -168,7 +166,6 @@ public class IntegrationTest {
 
     @Test
     public void testLogicShortCircuit() {
-        // Tests that second part of && / || is NOT executed if not needed
         String code = """
             func bool side_effect() {
                 print("Effect");

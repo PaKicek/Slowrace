@@ -6,7 +6,7 @@ import java.util.List;
 
 public class Heap {
     private final List<SrObject> objects = new ArrayList<>();
-    private static final int GC_THRESHOLD = 1000; // Trigger GC every 1000 allocations
+    private static final int GC_THRESHOLD = 1000;
     private int allocationCount = 0;
 
     public void register(SrObject obj) {
@@ -19,12 +19,11 @@ public class Heap {
     }
 
     public void sweep() {
-        // Remove everything NOT marked
         objects.removeIf(obj -> {
             if (!obj.isMarked) {
-                return true; // Delete
+                return true;
             }
-            obj.isMarked = false; // Reset mark for next cycle
+            obj.isMarked = false;
             return false;
         });
         allocationCount = 0;

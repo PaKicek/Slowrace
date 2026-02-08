@@ -2,7 +2,6 @@ package org.pakicek.parser.ast.node.expression;
 
 import org.pakicek.parser.ast.ASTVisitor;
 
-// Represents unary operations: op operand
 public class UnaryExpressionNode extends ExpressionNode {
     private final String operator;
     private final ExpressionNode operand;

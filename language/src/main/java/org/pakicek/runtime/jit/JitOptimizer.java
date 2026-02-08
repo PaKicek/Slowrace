@@ -9,62 +9,49 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-public class JitCompiler {
+public class JitOptimizer {
 
     public Chunk optimize(Chunk original) {
-        // Local Optimizations (Constant Folding & Arithmetic Identities)
         Chunk folded = optimizePass(original);
-
-        // Dead Code Elimination (Global Optimization)
-        // Removes unreachable code and recalculates jump offsets.
         return deadCodeElimination(folded);
     }
 
     private Chunk optimizePass(Chunk original) {
         Chunk optimized = new Chunk();
         optimized.constants.addAll(original.constants);
-
         List<Byte> code = original.code;
 
         int i = 0;
         while (i < code.size()) {
-            // Safe check for OpCode bounds
-            int opIndex = code.get(i) & 0xFF; // Unsigned cast
+            int opIndex = code.get(i) & 0xFF;
             if (opIndex >= OpCode.values().length) {
                 throw new RuntimeException("Invalid OpCode " + opIndex + " at index " + i);
             }
             OpCode op = OpCode.values()[opIndex];
 
-            // --- Optimization 1: Constant Folding ---
             if (tryConstantFolding(code, i, original, optimized)) {
-                i += 5; // Skip 5 bytes (2 ops + 2 args + 1 math op)
+                i += 5;
                 continue;
             }
 
-            // --- Optimization 2: Arithmetic Identities ---
             if (tryArithmeticIdentities(code, i, original, optimized)) {
-                i += 3; // Skip 3 bytes (LOAD_CONST + arg + 1 math op)
+                i += 3;
                 continue;
             }
 
-            // No optimization
             copyInstruction(code, i, original, optimized, op);
-
-            // Advance: 1 for opcode + arguments
             i += 1 + getOpcodeArity(op);
         }
         return optimized;
     }
 
     private boolean tryConstantFolding(List<Byte> code, int i, Chunk original, Chunk optimized) {
-        // Need at least 5 bytes: LOAD arg LOAD arg OP
         if (i + 4 >= code.size()) return false;
 
         int op1Idx = code.get(i) & 0xFF;
         int op2Idx = code.get(i + 2) & 0xFF;
         int mathOpIdx = code.get(i + 4) & 0xFF;
 
-        // Bounds check
         if (op1Idx >= OpCode.values().length || op2Idx >= OpCode.values().length || mathOpIdx >= OpCode.values().length) return false;
 
         OpCode op1 = OpCode.values()[op1Idx];
@@ -72,7 +59,7 @@ public class JitCompiler {
         OpCode mathOp = OpCode.values()[mathOpIdx];
 
         if (op1 == OpCode.LOAD_CONST && op2 == OpCode.LOAD_CONST && isMathOp(mathOp)) {
-            int idx1 = code.get(i + 1) & 0xFF; // Fix signed byte issue
+            int idx1 = code.get(i + 1) & 0xFF;
             int idx2 = code.get(i + 3) & 0xFF;
 
             SrValue v1 = original.constants.get(idx1);
@@ -130,12 +117,11 @@ public class JitCompiler {
         List<Byte> oldCode = input.code;
         int codeSize = oldCode.size();
         boolean[] reachable = new boolean[codeSize];
-        int[] oldToNewAddress = new int[codeSize + 1]; // Mapping array
+        int[] oldToNewAddress = new int[codeSize + 1];
         Arrays.fill(oldToNewAddress, -1);
 
-        // Reachability Analysis (BFS)
         Queue<Integer> queue = new LinkedList<>();
-        queue.add(0); // Entry point is reachable
+        queue.add(0);
         reachable[0] = true;
 
         while (!queue.isEmpty()) {
@@ -146,7 +132,6 @@ public class JitCompiler {
             OpCode op = OpCode.values()[opByte];
             int nextIp = ip + 1 + getOpcodeArity(op);
 
-            // Sequential flow (if not unconditional jump/return)
             if (op != OpCode.JMP && op != OpCode.RETURN && op != OpCode.HALT) {
                 if (nextIp < codeSize && !reachable[nextIp]) {
                     reachable[nextIp] = true;
@@ -154,16 +139,10 @@ public class JitCompiler {
                 }
             }
 
-            // Branch flow (Jumps)
             if (op == OpCode.JMP || op == OpCode.JMP_FALSE) {
-                // Parse current offset
                 int b1 = oldCode.get(ip + 1) & 0xFF;
                 int b2 = oldCode.get(ip + 2) & 0xFF;
                 short offset = (short) ((b1 << 8) | b2);
-
-                // Calculate target absolute address.
-                // VM logic: ip increases by 3 (instruction + 2 args), then adds offset.
-                // So: target = current_ip + 3 + offset
                 int jumpTarget = ip + 3 + offset;
 
                 if (jumpTarget >= 0 && jumpTarget < codeSize && !reachable[jumpTarget]) {
@@ -173,26 +152,21 @@ public class JitCompiler {
             }
         }
 
-        // Compact Code & Build Mapping
         Chunk cleaned = new Chunk();
-        cleanConstants(input, cleaned); // Optional: cleanup unused constants
+        cleanConstants(input, cleaned);
 
         for (int i = 0; i < codeSize; ) {
             int opByte = oldCode.get(i) & 0xFF;
             OpCode op = OpCode.values()[opByte];
             int len = 1 + getOpcodeArity(op);
-
             if (reachable[i]) {
-                oldToNewAddress[i] = cleaned.code.size(); // Map old IP to new IP
+                oldToNewAddress[i] = cleaned.code.size();
                 copyInstruction(oldCode, i, input, cleaned, op);
             }
-
             i += len;
         }
-        oldToNewAddress[codeSize] = cleaned.code.size(); // End marker
+        oldToNewAddress[codeSize] = cleaned.code.size();
 
-        // Patch Jumps
-        // Now we must update JMP offsets because instructions moved
         cleaned = new Chunk();
         cleaned.constants.addAll(input.constants);
 
@@ -203,27 +177,17 @@ public class JitCompiler {
 
             if (reachable[i]) {
                 if (op == OpCode.JMP || op == OpCode.JMP_FALSE) {
-                    // Calculate OLD target
                     int b1 = oldCode.get(i + 1) & 0xFF;
                     int b2 = oldCode.get(i + 2) & 0xFF;
                     short oldOffset = (short) ((b1 << 8) | b2);
                     int oldTarget = i + 3 + oldOffset;
-
-                    // Find NEW target
                     int newTarget = oldToNewAddress[oldTarget];
                     int newCurrentIp = cleaned.code.size();
-
-                    // Calculate NEW offset
-                    // VM logic: new_ip will be newCurrentIp + 3. Target is newTarget.
-                    // offset = newTarget - (newCurrentIp + 3)
                     int newOffset = newTarget - (newCurrentIp + 3);
-
-                    // Emit patched
-                    cleaned.emit(op, 0); // 0 = dummy line
+                    cleaned.emit(op, 0);
                     cleaned.emitByte((newOffset >> 8) & 0xFF, 0);
                     cleaned.emitByte(newOffset & 0xFF, 0);
                 } else {
-                    // Regular copy
                     copyInstruction(oldCode, i, input, cleaned, op);
                 }
             }
@@ -267,7 +231,7 @@ public class JitCompiler {
     private int getOpcodeArity(OpCode op) {
         return switch (op) {
             case LOAD_CONST, LOAD_LOCAL, STORE_LOCAL, NEW_STRUCT, GET_FIELD, SET_FIELD -> 1;
-            case CALL, JMP, JMP_FALSE -> 2; // 2 byte args
+            case CALL, JMP, JMP_FALSE -> 2;
             default -> 0;
         };
     }

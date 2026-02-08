@@ -3,7 +3,6 @@ package org.pakicek.parser.ast.node.expression.literal;
 import org.pakicek.parser.ast.ASTVisitor;
 import org.pakicek.parser.ast.node.expression.ExpressionNode;
 
-// Represents string literal: "hello world"
 public class StringLiteralNode extends ExpressionNode {
     private final String value;
 

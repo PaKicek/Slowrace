@@ -3,7 +3,6 @@ package org.pakicek.parser.ast.node;
 import org.pakicek.parser.ast.ASTVisitor;
 import org.pakicek.parser.ast.node.statement.BlockStatementNode;
 
-// Represents the main program entry point
 public class MainNode extends ASTNode {
     private BlockStatementNode body;
 

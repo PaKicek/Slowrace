@@ -13,7 +13,7 @@ public class ASTPrinter implements ASTVisitor<String> {
     private final StringBuilder output = new StringBuilder();
 
     public String print(ASTNode node) {
-        output.setLength(0); // Clear previous content
+        output.setLength(0);
         indentLevel = 0;
         node.accept(this);
         return output.toString();
@@ -28,14 +28,11 @@ public class ASTPrinter implements ASTVisitor<String> {
         output.append(text).append("\n");
     }
 
-    // Root & Declarations
-
     @Override
     public String visit(ProgramNode node) {
         println("Program");
         indentLevel++;
 
-        // First print structures
         if (!node.getStructs().isEmpty()) {
             println("Structs:");
             indentLevel++;
@@ -45,7 +42,6 @@ public class ASTPrinter implements ASTVisitor<String> {
             indentLevel--;
         }
 
-        // Then functions
         if (!node.getFunctions().isEmpty()) {
             println("Functions:");
             indentLevel++;
@@ -129,7 +125,6 @@ public class ASTPrinter implements ASTVisitor<String> {
             println("Fields:");
             indentLevel++;
             for (VariableDeclarationNode field : node.getFields()) {
-                // Structure fields are VariableDeclarationNode
                 field.accept(this);
             }
             indentLevel--;
@@ -140,8 +135,6 @@ public class ASTPrinter implements ASTVisitor<String> {
         indentLevel--;
         return "";
     }
-
-    // Types
 
     @Override
     public String visit(BasicTypeNode node) {
@@ -182,8 +175,6 @@ public class ASTPrinter implements ASTVisitor<String> {
         indentLevel--;
         return "";
     }
-
-    // Statements
 
     @Override
     public String visit(BlockStatementNode node) {
@@ -360,8 +351,6 @@ public class ASTPrinter implements ASTVisitor<String> {
         return "";
     }
 
-    // Expressions
-
     @Override
     public String visit(BinaryExpressionNode node) {
         println("Binary Expression: " + node.getOperator());
@@ -441,10 +430,10 @@ public class ASTPrinter implements ASTVisitor<String> {
 
         println("Object:");
         indentLevel++;
-        node.getObject().accept(this); // Left part (variable, array, etc.)
+        node.getObject().accept(this);
         indentLevel--;
 
-        println("Field: " + node.getFieldName()); // Field name
+        println("Field: " + node.getFieldName());
         indentLevel--;
         return "";
     }
@@ -474,8 +463,6 @@ public class ASTPrinter implements ASTVisitor<String> {
         println("Variable: " + node.getName());
         return "";
     }
-
-    // Literals
 
     @Override
     public String visit(IntegerLiteralNode node) {

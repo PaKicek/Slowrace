@@ -7,7 +7,6 @@ import org.pakicek.parser.ast.node.type.TypeNode;
 import java.util.ArrayList;
 import java.util.List;
 
-// Represents function declaration: func returnType name(params) { body }
 public class FunctionDeclarationNode extends ASTNode {
     private final String name;
     private final TypeNode returnType;

@@ -3,7 +3,6 @@ package org.pakicek.parser.ast.node;
 import org.pakicek.parser.ast.ASTVisitor;
 import org.pakicek.parser.ast.node.type.TypeNode;
 
-// Represents function parameter: type name
 public class ParameterNode extends ASTNode {
     private final String name;
     private final TypeNode type;

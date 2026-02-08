@@ -2,7 +2,6 @@ package org.pakicek.parser.ast.node.type;
 
 import org.pakicek.parser.ast.ASTVisitor;
 
-// Represents a user-defined struct type usage: Point p;
 public class StructTypeNode extends TypeNode {
     private final String structName;
 

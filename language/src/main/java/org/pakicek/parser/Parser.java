@@ -20,7 +20,6 @@ public class Parser {
 
     public ProgramNode parse() {
         ProgramNode program = new ProgramNode(1, 1);
-
         while (!isAtEnd()) {
             if (match(TokenType.FUNC)) {
                 FunctionDeclarationNode function = parseFunctionDeclaration();
@@ -35,7 +34,6 @@ public class Parser {
                 throw error(peek(), "Expected function, main, or struct declaration");
             }
         }
-
         return program;
     }
 
@@ -43,19 +41,13 @@ public class Parser {
         Token structToken = previous();
         Token name = consume(TokenType.IDENTIFIER, "Expected struct name");
         consume(TokenType.LEFT_BRACE, "Expected '{' before struct body");
-
         StructDeclarationNode structNode = new StructDeclarationNode(name.getLexeme(), structToken.getLine(), structToken.getPosition());
 
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-            // Struct fields are parsed as variable declarations
-            // Type Name;
             TypeNode type = parseType();
             Token fieldName = consume(TokenType.IDENTIFIER, "Expected field name");
             consume(TokenType.SEMICOLON, "Expected ';' after field declaration");
-
-            structNode.addField(new VariableDeclarationNode(
-                    fieldName.getLexeme(), type, fieldName.getLine(), fieldName.getPosition()
-            ));
+            structNode.addField(new VariableDeclarationNode(fieldName.getLexeme(), type, fieldName.getLine(), fieldName.getPosition()));
         }
 
         consume(TokenType.RIGHT_BRACE, "Expected '}' after struct body");
@@ -66,14 +58,9 @@ public class Parser {
         Token funcToken = previous();
         TypeNode returnType = parseType();
         Token name = consume(TokenType.IDENTIFIER, "Expected function name");
-
         consume(TokenType.LEFT_PAREN, "Expected '(' after function name");
+        FunctionDeclarationNode function = new FunctionDeclarationNode(name.getLexeme(), returnType, funcToken.getLine(), funcToken.getPosition());
 
-        FunctionDeclarationNode function = new FunctionDeclarationNode(
-                name.getLexeme(), returnType, funcToken.getLine(), funcToken.getPosition()
-        );
-
-        // Parse parameters
         if (!check(TokenType.RIGHT_PAREN)) {
             do {
                 ParameterNode parameter = parseParameter();
@@ -82,41 +69,27 @@ public class Parser {
         }
 
         consume(TokenType.RIGHT_PAREN, "Expected ')' after parameters");
-
-        // Parse function body
         BlockStatementNode body = parseBlockStatement();
         function.setBody(body);
-
         return function;
     }
 
     private MainNode parseMain() {
         Token mainToken = previous();
-
-        // Parse main signature: main (int argc, array string argv[])
         consume(TokenType.LEFT_PAREN, "Expected '(' after 'main'");
-
-        // Parse argc parameter
         consume(TokenType.INT, "Expected 'int' for argc parameter");
         consume(TokenType.IDENTIFIER, "Expected 'argc' parameter name");
-
         consume(TokenType.COMMA, "Expected ',' after argc parameter");
-
-        // Parse argv parameter
         consume(TokenType.ARRAY, "Expected 'array' for argv parameter");
         consume(TokenType.STRING, "Expected 'string' for argv element type");
         consume(TokenType.IDENTIFIER, "Expected 'argv' parameter name");
         consume(TokenType.LEFT_BRACKET, "Expected '[' after argv");
         consume(TokenType.RIGHT_BRACKET, "Expected ']' after argv");
-
         consume(TokenType.RIGHT_PAREN, "Expected ')' after main parameters");
 
         MainNode mainNode = new MainNode(mainToken.getLine(), mainToken.getPosition());
-
-        // Parse main body
         BlockStatementNode body = parseBlockStatement();
         mainNode.setBody(body);
-
         return mainNode;
     }
 
@@ -126,13 +99,10 @@ public class Parser {
 
         if (type instanceof ArrayTypeNode arrayType && match(TokenType.LEFT_BRACKET)) {
             Integer size = null;
-
             if (match(TokenType.INTEGER_LITERAL)) {
                 size = ((Long) previous().getLiteral()).intValue();
             }
-
             consume(TokenType.RIGHT_BRACKET, "Expected ']' after array size");
-
             type = new ArrayTypeNode(arrayType.getElementType(), size, type.getLine(), type.getPosition());
         }
 
@@ -141,7 +111,6 @@ public class Parser {
 
     private TypeNode parseType() {
         Token token = advance();
-
         if (token.getType() == TokenType.ARRAY) {
             TypeNode elementType = parseType();
             return new ArrayTypeNode(elementType, (Integer) null, token.getLine(), token.getPosition());
@@ -161,22 +130,12 @@ public class Parser {
         if (match(TokenType.WHILE)) return parseWhileLoop();
         if (match(TokenType.RETURN)) return parseReturnStatement();
         if (match(TokenType.LEFT_BRACE)) return parseBlockStatement();
-
-        // Variable declaration or assignment
-        if (isStatementDeclaration()) {
-            return parseVariableDeclaration();
-        }
-
-        // Expression statement
+        if (isStatementDeclaration()) return parseVariableDeclaration();
         return parseExpressionStatement();
     }
 
     private boolean isStatementDeclaration() {
-        // Check built-in types
         if (isTypeKeyword(peek().getType())) return true;
-
-        // Check user-defined types (StructName variableName;)
-        // If current token is ID and next token is ID, it is a declaration like "Point p;"
         return peek().getType() == TokenType.IDENTIFIER && peekNext().getType() == TokenType.IDENTIFIER;
     }
 
@@ -185,12 +144,9 @@ public class Parser {
         consume(TokenType.LEFT_PAREN, "Expected '(' after 'if'");
         ExpressionNode condition = parseExpression();
         consume(TokenType.RIGHT_PAREN, "Expected ')' after if condition");
-
         BlockStatementNode thenBlock = parseBlockStatement();
-        IfStatementNode ifStatement = new IfStatementNode(condition, thenBlock,
-                ifToken.getLine(), ifToken.getPosition());
+        IfStatementNode ifStatement = new IfStatementNode(condition, thenBlock, ifToken.getLine(), ifToken.getPosition());
 
-        // Parse elif branches
         while (match(TokenType.ELIF)) {
             consume(TokenType.LEFT_PAREN, "Expected '(' after 'elif'");
             ExpressionNode elifCondition = parseExpression();
@@ -199,7 +155,6 @@ public class Parser {
             ifStatement.addElifBranch(new IfStatementNode.ElifBranch(elifCondition, elifBlock));
         }
 
-        // Parse else branch
         if (match(TokenType.ELSE)) {
             BlockStatementNode elseBlock = parseBlockStatement();
             ifStatement.setElseBlock(elseBlock);
@@ -211,9 +166,8 @@ public class Parser {
     private ForLoopNode parseForLoop() {
         Token forToken = previous();
         consume(TokenType.LEFT_PAREN, "Expected '(' after 'for'");
-
-        // Parse initialization
         StatementNode initialization;
+
         if (match(TokenType.SEMICOLON)) {
             initialization = null;
         } else if (isStatementDeclaration()) {
@@ -222,14 +176,12 @@ public class Parser {
             initialization = parseExpressionStatement();
         }
 
-        // Parse condition
         ExpressionNode condition = null;
         if (!check(TokenType.SEMICOLON)) {
             condition = parseExpression();
         }
         consume(TokenType.SEMICOLON, "Expected ';' after for condition");
 
-        // Parse update
         ExpressionNode update = null;
         if (!check(TokenType.RIGHT_PAREN)) {
             update = parseExpression();
@@ -237,9 +189,7 @@ public class Parser {
         consume(TokenType.RIGHT_PAREN, "Expected ')' after for clauses");
 
         BlockStatementNode body = parseBlockStatement();
-
-        return new ForLoopNode(initialization, condition, update, body,
-                forToken.getLine(), forToken.getPosition());
+        return new ForLoopNode(initialization, condition, update, body, forToken.getLine(), forToken.getPosition());
     }
 
     private WhileLoopNode parseWhileLoop() {
@@ -249,15 +199,12 @@ public class Parser {
         consume(TokenType.RIGHT_PAREN, "Expected ')' after while condition");
 
         BlockStatementNode body = parseBlockStatement();
-
         return new WhileLoopNode(condition, body, whileToken.getLine(), whileToken.getPosition());
     }
 
     private ReturnStatementNode parseReturnStatement() {
         Token returnToken = previous();
-        ReturnStatementNode returnStatement = new ReturnStatementNode(
-                returnToken.getLine(), returnToken.getPosition()
-        );
+        ReturnStatementNode returnStatement = new ReturnStatementNode(returnToken.getLine(), returnToken.getPosition());
 
         if (!check(TokenType.SEMICOLON)) {
             ExpressionNode value = parseExpression();
@@ -271,10 +218,7 @@ public class Parser {
     private BlockStatementNode parseBlockStatement() {
         consume(TokenType.LEFT_BRACE, "Expected '{' before block");
         Token braceToken = previous();
-
-        BlockStatementNode block = new BlockStatementNode(
-                braceToken.getLine(), braceToken.getPosition()
-        );
+        BlockStatementNode block = new BlockStatementNode(braceToken.getLine(), braceToken.getPosition());
 
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
             StatementNode statement = parseStatement();
@@ -286,43 +230,31 @@ public class Parser {
     }
 
     private VariableDeclarationNode parseVariableDeclaration() {
-        TypeNode type = parseType(); // Use parseType, which now understands structs as well
+        TypeNode type = parseType();
         Token name = consume(TokenType.IDENTIFIER, "Expected variable name");
 
-        // Check for array size
         if (type instanceof ArrayTypeNode arrayType && match(TokenType.LEFT_BRACKET)) {
             Integer fixedSize = null;
             ExpressionNode sizeExpression = null;
-
             if (!check(TokenType.RIGHT_BRACKET)) {
                 if (match(TokenType.INTEGER_LITERAL)) {
-                    // Fixed size: array int[5]
                     fixedSize = ((Long) previous().getLiteral()).intValue();
                 } else {
-                    // Dynamic size: array int[n + 1]
                     sizeExpression = parseExpression();
                 }
             }
-            consume(TokenType.RIGHT_BRACKET, "Expected ']' after array size");
 
-            // Create appropriate ArrayTypeNode
+            consume(TokenType.RIGHT_BRACKET, "Expected ']' after array size");
             if (fixedSize != null) {
-                type = new ArrayTypeNode(arrayType.getElementType(), fixedSize,
-                        type.getLine(), type.getPosition());
+                type = new ArrayTypeNode(arrayType.getElementType(), fixedSize, type.getLine(), type.getPosition());
             } else if (sizeExpression != null) {
-                type = new ArrayTypeNode(arrayType.getElementType(), sizeExpression,
-                        type.getLine(), type.getPosition());
+                type = new ArrayTypeNode(arrayType.getElementType(), sizeExpression, type.getLine(), type.getPosition());
             } else {
-                // No size specified: array int[]
-                type = new ArrayTypeNode(arrayType.getElementType(), (Integer) null,
-                        type.getLine(), type.getPosition());
+                type = new ArrayTypeNode(arrayType.getElementType(), (Integer) null, type.getLine(), type.getPosition());
             }
         }
 
-        VariableDeclarationNode declaration = new VariableDeclarationNode(
-                name.getLexeme(), type, name.getLine(), name.getPosition()
-        );
-
+        VariableDeclarationNode declaration = new VariableDeclarationNode(name.getLexeme(), type, name.getLine(), name.getPosition());
         if (match(TokenType.ASSIGN)) {
             ExpressionNode initialValue = parseExpression();
             declaration.setInitialValue(initialValue);
@@ -334,9 +266,7 @@ public class Parser {
 
     private ExpressionStatementNode parseExpressionStatement() {
         ExpressionNode expression = parseExpression();
-        ExpressionStatementNode statement = new ExpressionStatementNode(
-                expression, expression.getLine(), expression.getPosition()
-        );
+        ExpressionStatementNode statement = new ExpressionStatementNode(expression, expression.getLine(), expression.getPosition());
 
         consume(TokenType.SEMICOLON, "Expected ';' after expression");
         return statement;
@@ -353,9 +283,7 @@ public class Parser {
             Token equals = previous();
             ExpressionNode value = parseAssignment();
 
-            if (expression instanceof VariableNode ||
-                    expression instanceof ArrayAccessNode ||
-                    expression instanceof FieldAccessNode) {
+            if (expression instanceof VariableNode || expression instanceof ArrayAccessNode || expression instanceof FieldAccessNode) {
                 return new AssignmentNode(expression, value, equals.getLine(), equals.getPosition());
             }
 
@@ -371,8 +299,7 @@ public class Parser {
         while (match(TokenType.OR)) {
             Token operator = previous();
             ExpressionNode right = parseLogicalAnd();
-            expression = new BinaryExpressionNode(expression, operator.getLexeme(), right,
-                    operator.getLine(), operator.getPosition());
+            expression = new BinaryExpressionNode(expression, operator.getLexeme(), right, operator.getLine(), operator.getPosition());
         }
 
         return expression;
@@ -384,8 +311,7 @@ public class Parser {
         while (match(TokenType.AND)) {
             Token operator = previous();
             ExpressionNode right = parseEquality();
-            expression = new BinaryExpressionNode(expression, operator.getLexeme(), right,
-                    operator.getLine(), operator.getPosition());
+            expression = new BinaryExpressionNode(expression, operator.getLexeme(), right, operator.getLine(), operator.getPosition());
         }
 
         return expression;
@@ -397,8 +323,7 @@ public class Parser {
         while (match(TokenType.EQUALS, TokenType.NOT_EQUALS)) {
             Token operator = previous();
             ExpressionNode right = parseComparison();
-            expression = new BinaryExpressionNode(expression, operator.getLexeme(), right,
-                    operator.getLine(), operator.getPosition());
+            expression = new BinaryExpressionNode(expression, operator.getLexeme(), right, operator.getLine(), operator.getPosition());
         }
 
         return expression;
@@ -407,12 +332,10 @@ public class Parser {
     private ExpressionNode parseComparison() {
         ExpressionNode expression = parseTerm();
 
-        while (match(TokenType.GREATER, TokenType.GREATER_EQUAL,
-                TokenType.LESS, TokenType.LESS_EQUAL)) {
+        while (match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
             Token operator = previous();
             ExpressionNode right = parseTerm();
-            expression = new BinaryExpressionNode(expression, operator.getLexeme(), right,
-                    operator.getLine(), operator.getPosition());
+            expression = new BinaryExpressionNode(expression, operator.getLexeme(), right, operator.getLine(), operator.getPosition());
         }
 
         return expression;
@@ -424,8 +347,7 @@ public class Parser {
         while (match(TokenType.PLUS, TokenType.MINUS)) {
             Token operator = previous();
             ExpressionNode right = parseFactor();
-            expression = new BinaryExpressionNode(expression, operator.getLexeme(), right,
-                    operator.getLine(), operator.getPosition());
+            expression = new BinaryExpressionNode(expression, operator.getLexeme(), right, operator.getLine(), operator.getPosition());
         }
 
         return expression;
@@ -434,12 +356,10 @@ public class Parser {
     private ExpressionNode parseFactor() {
         ExpressionNode expression = parseUnary();
 
-        while (match(TokenType.MULTIPLY, TokenType.DIVIDE, TokenType.MODULO,
-                TokenType.BITWISE_AND, TokenType.BITWISE_OR)) {
+        while (match(TokenType.MULTIPLY, TokenType.DIVIDE, TokenType.MODULO, TokenType.BITWISE_AND, TokenType.BITWISE_OR)) {
             Token operator = previous();
             ExpressionNode right = parseUnary();
-            expression = new BinaryExpressionNode(expression, operator.getLexeme(), right,
-                    operator.getLine(), operator.getPosition());
+            expression = new BinaryExpressionNode(expression, operator.getLexeme(), right, operator.getLine(), operator.getPosition());
         }
 
         return expression;
@@ -449,15 +369,13 @@ public class Parser {
         if (match(TokenType.NOT, TokenType.MINUS, TokenType.NOT)) {
             Token operator = previous();
             ExpressionNode right = parseUnary();
-            return new UnaryExpressionNode(operator.getLexeme(), right,
-                    operator.getLine(), operator.getPosition());
+            return new UnaryExpressionNode(operator.getLexeme(), right, operator.getLine(), operator.getPosition());
         }
 
         if (match(TokenType.INCREMENT, TokenType.DECREMENT)) {
             Token operator = previous();
             ExpressionNode right = parseUnary();
-            return new UnaryExpressionNode(operator.getLexeme(), right,
-                    operator.getLine(), operator.getPosition());
+            return new UnaryExpressionNode(operator.getLexeme(), right, operator.getLine(), operator.getPosition());
         }
 
         return parseCallAndAccess();
@@ -475,7 +393,6 @@ public class Parser {
                 consume(TokenType.RIGHT_BRACKET, "Expected ']' after array index");
                 expr = new ArrayAccessNode(expr, index, bracket.getLine(), bracket.getPosition());
             } else if (match(TokenType.DOT)) {
-                // Handle dot operator
                 Token dot = previous();
                 Token field = consume(TokenType.IDENTIFIER, "Expected field name after '.'");
                 expr = new FieldAccessNode(expr, field.getLexeme(), dot.getLine(), dot.getPosition());
@@ -484,23 +401,18 @@ public class Parser {
             }
         }
 
-        // Postfix increments/decrements (a++)
         while (match(TokenType.INCREMENT, TokenType.DECREMENT)) {
             Token operator = previous();
-            expr = new UnaryExpressionNode(operator.getLexeme(), expr,
-                    operator.getLine(), operator.getPosition());
+            expr = new UnaryExpressionNode(operator.getLexeme(), expr, operator.getLine(), operator.getPosition());
         }
 
         return expr;
     }
 
     private ExpressionNode finishCall(ExpressionNode callee) {
-        // The AST only supports calling functions by name (String),
-        // so the callee must be a VariableNode (identifier).
         if (!(callee instanceof VariableNode)) {
             throw error(peek(), "Can only call named functions");
         }
-
         String funcName = ((VariableNode) callee).getName();
         FunctionCallNode call = new FunctionCallNode(funcName, callee.getLine(), callee.getPosition());
 
@@ -518,7 +430,6 @@ public class Parser {
     private ExpressionNode parsePrimary() {
         if (match(TokenType.BOOLEAN_LITERAL)) {
             Token token = previous();
-            // Lexer returns Boolean object in literal, or null and we parse text
             Object literal = token.getLiteral();
             boolean value = (literal instanceof Boolean) ? (Boolean) literal : Boolean.parseBoolean(token.getLexeme());
             return new BooleanLiteralNode(value, token.getLine(), token.getPosition());
@@ -566,7 +477,6 @@ public class Parser {
         return array;
     }
 
-    // Utility methods
     private boolean match(TokenType... types) {
         for (TokenType type : types) {
             if (check(type)) {
@@ -587,7 +497,6 @@ public class Parser {
         return peek().getType() == type;
     }
 
-    // Helper to peek next token
     private Token peekNext() {
         if (current + 1 >= tokens.size()) return tokens.get(tokens.size() - 1);
         return tokens.get(current + 1);
@@ -611,20 +520,15 @@ public class Parser {
     }
 
     private boolean isTypeKeyword(TokenType type) {
-        return type == TokenType.INT || type == TokenType.FLOAT ||
-                type == TokenType.STRING || type == TokenType.BOOL ||
-                type == TokenType.VOID || type == TokenType.ARRAY;
+        return type == TokenType.INT || type == TokenType.FLOAT || type == TokenType.STRING || type == TokenType.BOOL || type == TokenType.VOID || type == TokenType.ARRAY;
     }
 
     private boolean isBasicType(TokenType type) {
-        return type == TokenType.INT || type == TokenType.FLOAT ||
-                type == TokenType.STRING || type == TokenType.BOOL ||
-                type == TokenType.VOID;
+        return type == TokenType.INT || type == TokenType.FLOAT || type == TokenType.STRING || type == TokenType.BOOL || type == TokenType.VOID;
     }
 
     private ParseError error(Token token, String message) {
-        System.err.println("Parse error [line " + token.getLine() + ", position " +
-                token.getPosition() + "]: " + message);
+        System.err.println("Parse error [line " + token.getLine() + ", position " + token.getPosition() + "]: " + message);
         return new ParseError(message, token.getLine(), token.getPosition());
     }
 

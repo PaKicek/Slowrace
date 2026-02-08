@@ -4,7 +4,6 @@ import org.pakicek.parser.ast.ASTVisitor;
 import org.pakicek.parser.ast.node.expression.ExpressionNode;
 import org.pakicek.parser.ast.node.type.TypeNode;
 
-// Represents variable declaration: type name [= initialValue]
 public class VariableDeclarationNode extends StatementNode {
     private final String name;
     private final TypeNode type;

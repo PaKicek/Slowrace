@@ -5,7 +5,6 @@ import org.pakicek.parser.ast.ASTVisitor;
 import java.util.ArrayList;
 import java.util.List;
 
-// Represents the entire program
 public class ProgramNode extends ASTNode {
     private final List<FunctionDeclarationNode> functions;
     private final List<StructDeclarationNode> structs;
@@ -25,7 +24,6 @@ public class ProgramNode extends ASTNode {
         functions.add(function);
     }
 
-    // Methods for structs
     public List<StructDeclarationNode> getStructs() {
         return structs;
     }

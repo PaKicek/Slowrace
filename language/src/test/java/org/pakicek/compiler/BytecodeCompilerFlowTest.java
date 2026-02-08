@@ -47,12 +47,11 @@ public class BytecodeCompilerFlowTest {
         """;
         Chunk chunk = compileSource(code);
 
-        // If-Else generates:
+        // If-else generates:
         // JMP_FALSE (jump to else)
         // ... then block ...
         // JMP (jump to end)
         // ... else block ...
-
         assertEquals(1, countOpCodes(chunk, OpCode.JMP_FALSE));
         assertEquals(1, countOpCodes(chunk, OpCode.JMP));
     }
@@ -73,7 +72,6 @@ public class BytecodeCompilerFlowTest {
         // JMP_FALSE (exit)
         // Body
         // JMP (loop back)
-
         assertEquals(1, countOpCodes(chunk, OpCode.JMP_FALSE));
         assertEquals(1, countOpCodes(chunk, OpCode.JMP));
     }
@@ -90,15 +88,11 @@ public class BytecodeCompilerFlowTest {
 
         // && generates JMP_FALSE (skip if first is false)
         // || generates JMP_FALSE (to check second) and JMP (to skip second if first true)
-
         // Total JMP_FALSE: 1 (for &&) + 1 (for ||) = 2
         // Total JMP: 1 (for ||)
-
         assertTrue(countOpCodes(chunk, OpCode.JMP_FALSE) >= 2);
         assertTrue(countOpCodes(chunk, OpCode.JMP) >= 1);
-
-        // Also check stack manipulation for logic
         assertTrue(countOpCodes(chunk, OpCode.DUP) >= 2);
-        assertTrue(countOpCodes(chunk, OpCode.POP) >= 2); // To pop the first operand if consumed
+        assertTrue(countOpCodes(chunk, OpCode.POP) >= 2);
     }
 }

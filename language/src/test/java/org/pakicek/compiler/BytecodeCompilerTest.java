@@ -26,7 +26,6 @@ public class BytecodeCompilerTest {
 
     private boolean hasOpCode(Chunk chunk, OpCode op) {
         for (byte b : chunk.code) {
-            // Safe check: values() array bounds
             if (b >= 0 && b < OpCode.values().length && OpCode.values()[b] == op) {
                 return true;
             }
@@ -43,8 +42,6 @@ public class BytecodeCompilerTest {
             }
         """;
         Chunk chunk = compileSource(code);
-
-        // Should contain LOAD_CONST, STORE_LOCAL (for a), LOAD_LOCAL (for a), STORE_LOCAL (for b)
         assertTrue(hasOpCode(chunk, OpCode.LOAD_CONST));
         assertTrue(hasOpCode(chunk, OpCode.STORE_LOCAL));
         assertTrue(hasOpCode(chunk, OpCode.LOAD_LOCAL));
@@ -60,11 +57,8 @@ public class BytecodeCompilerTest {
             }
         """;
         Chunk chunk = compileSource(code);
-
         assertTrue(hasOpCode(chunk, OpCode.LOAD_TRUE));
         assertTrue(hasOpCode(chunk, OpCode.NOT));
-        // -5 might be compiled as LOAD_CONST(5) -> NEG (or -1 * 5)
-        // Our compiler uses -1 * value
         assertTrue(hasOpCode(chunk, OpCode.MUL));
     }
 
@@ -79,7 +73,6 @@ public class BytecodeCompilerTest {
             }
         """;
         Chunk chunk = compileSource(code);
-
         assertTrue(hasOpCode(chunk, OpCode.NEW_STRUCT));
         assertTrue(hasOpCode(chunk, OpCode.SET_FIELD));
         assertTrue(hasOpCode(chunk, OpCode.GET_FIELD));
@@ -95,7 +88,6 @@ public class BytecodeCompilerTest {
             }
         """;
         Chunk chunk = compileSource(code);
-
         assertTrue(hasOpCode(chunk, OpCode.NEW_ARRAY));
         assertTrue(hasOpCode(chunk, OpCode.SET_ARRAY));
         assertTrue(hasOpCode(chunk, OpCode.GET_ARRAY));
